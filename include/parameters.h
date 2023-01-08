@@ -5,17 +5,20 @@ namespace Parameters
     /// @brief Global parameters (can be changed easily)
     struct Parameters
     {
-        /// @brief The max room temperature after which fan control is shut off
-        float MaxRoomTemp = 20;
+        /// @brief The lowest power (in PWM) before the fans stop moving
+        uint8_t PMin = 50;
 
-        /// @brief The minimal delta between room and heater after which fan control is turned on
-        float MinTempDelta = 5;
+        /// @brief The highest acceptable power (in PWM)
+        uint8_t PMax = 255;
 
-        /// @brief Temperature-Delta at which the lowest duty cycle is applied
-        float TempLowestPWM = 0;
+        /// @brief The min room temp which the control tries to reach
+        float TRoomMin = 20;
 
-        /// @brief Temperature-Delta at which the highest duty cycle is applied
-        float TempHighestPWM = 10;
+        /// @brief The min heater temp at which control is enabled
+        float THeatMin = 20;
+
+        /// @brief Make sure zero terminated and only 15 readable chars!
+        char HostName[16] = "FanDriver";
     };
 
     /// @brief Turns parameters into a comma separates, dotted float string

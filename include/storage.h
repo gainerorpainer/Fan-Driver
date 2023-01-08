@@ -6,7 +6,7 @@ namespace Storage
 {
     void Setup();
 
-    Parameters::Parameters Load();
+    bool Load(Parameters::Parameters &output);
 
     void Store(Parameters::Parameters const &parameters);
 }

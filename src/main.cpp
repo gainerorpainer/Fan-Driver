@@ -11,7 +11,6 @@
 #include "storage.h"
 
 #define FEATURE_TEMPINPUTS
-#define FEATURE_WIFI
 
 /// @brief used to control fan
 constexpr byte PWM_PIN = D8;
@@ -21,7 +20,6 @@ const struct
 {
   const char *Ssid = "Welahn24";
   const char *Password = "34200359922680323403";
-  const char *HostName = "FanControlDriver";
 } WIFI_SERVER_SETUP;
 
 // static publics
@@ -32,27 +30,28 @@ ESP8266WebServer _server(80);
 /// @brief Calc the PWM duty cycle
 /// @param heaterTemp in ° C
 /// @param roomTemp in ° C
-/// @return 0..255
-int CalcPWM(float heaterTemp, float roomTemp)
+/// @return 0.0 to 100.0
+float CalcFanPowerPerc(float heaterTemp, float roomTemp)
 {
-  // max room temp
-  if (roomTemp >= _parameters.MaxRoomTemp)
-    return 1;
+  // heaters are hot enough?
+  if (heaterTemp < _parameters.THeatMin)
+    return 0;
 
-  // min powercycle
-  float const tempDelta = heaterTemp - roomTemp;
-  if (tempDelta < _parameters.MinTempDelta)
-    return 1;
+  // 100 % region?
+  float const tRoomMinLerpBound = _parameters.TRoomMin - 1;
+  if (roomTemp < tRoomMinLerpBound)
+    return 100;
 
-  // LERP
-  float pwm = map(tempDelta, _parameters.TempLowestPWM, _parameters.TempHighestPWM, 0, 255);
+  // 0% region?
+  if (roomTemp > _parameters.TRoomMin)
+    return 0;
 
-  // sanity check
-  if (isnan(pwm))
-    pwm = 0.0f;
+  // LERP within the interval [TRoomMin - 1; TRoomMin]
+  // increase integer precision
+  float pwm = map((int)(100.0f * roomTemp), (int)(100.0f * tRoomMinLerpBound), (int)(100.0f * _parameters.TRoomMin), 0, 100);
 
-  // cap
-  return max(min((int)pwm, 255), 0);
+  // sanity check & cap
+  return isnan(pwm) ? 100 : max(min(pwm, 100.0f), 0.0f);
 }
 
 /// @brief SETUP
@@ -73,7 +72,16 @@ void setup()
   pinMode(LED_BUILTIN, OUTPUT);
 
   // load parameters
-  _parameters = Storage::Load();
+  if (!Storage::Load(_parameters))
+  // no storage found
+  {
+    _parameters = Parameters::Parameters();
+
+    // watch out for string length!
+    sprintf(_parameters.HostName, "FanDriver_%i", (int)random(0, 1000));
+
+    Storage::Store(_parameters);
+  }
 
   // wifi setup
   WiFi.mode(WIFI_STA);
@@ -90,7 +98,7 @@ void setup()
   Serial.println(WiFi.localIP());
 
   // DNS
-  MDNS.begin(WIFI_SERVER_SETUP.HostName);
+  MDNS.begin(_parameters.HostName);
 
   // HTML ressource mapping
   _server.on("/", Html::onGetHome);
@@ -118,6 +126,17 @@ void loop()
   delay(100);
   digitalWrite(LED_BUILTIN, LOW);
 
+  int fanPowerPerc = 0;
+
+  // manual override?
+  if (_status.ManualSecondsLeft > 0)
+  {
+    // tick down!
+    _status.ManualSecondsLeft -= 1;
+
+    fanPowerPerc = _status.ManualPowerPerc;
+  }
+
 #if defined(FEATURE_TEMPINPUTS)
   // get temp readings
   auto const report = Inputs::Read();
@@ -125,25 +144,25 @@ void loop()
   _status.RoomTemp = report.Temp2;
 
   // t1 = heater, t2 = room
-  int const pwm_cycle = CalcPWM(report.Temp1, report.Temp2);
+  fanPowerPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
 
   Serial.print("Heater: ");
   Serial.print(_status.HeaterTemp, 1);
   Serial.print(", Room: ");
   Serial.print(_status.HeaterTemp, 1);
   Serial.print(", PWM0..255: ");
-  Serial.println(pwm_cycle);
+  Serial.println(fanPowerPerc);
 
-  // apply fan power
-  // do not let duty cycle == 0, otherwise timer setup is discarded
-  analogWrite(PWM_PIN, pwm_cycle);
 #endif
 
-#if defined(FEATURE_WIFI)
+  // apply fan power with respect to parameters
+  // make use of higher integer precision
+  uint8_t const fanPowerPwm = map(100 * fanPowerPerc, 100 * (0), 100 * (100), _parameters., 255);
+  analogWrite(PWM_PIN, fanPowerPwm);
+
   // handle html server & dns broadcast
   MDNS.update();
   _server.handleClient();
-#endif
 
   // cycle length
   delay(1000);

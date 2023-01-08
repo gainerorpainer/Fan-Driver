@@ -12,10 +12,11 @@ namespace Parameters
     {
         buffer = _jsonBuffer;
         StaticJsonDocument<JSON_BUFFER_SIZE> doc;
-        doc["maxRoomTemp"] = input.MaxRoomTemp;
-        doc["minTempDelta"] = input.MinTempDelta;
-        doc["tempLowestPwm"] = input.TempLowestPWM;
-        doc["tempHighestPwm"] = input.TempHighestPWM;
+        doc["pMin"] = input.PMin;
+        doc["pMax"] = input.PMax;
+        doc["tRoomMin"] = input.TRoomMin;
+        doc["tHeatMin"] = input.THeatMin;
+        doc["hostName"] = input.HostName;
         return serializeJson(doc, _jsonBuffer);
     }
 
@@ -26,18 +27,24 @@ namespace Parameters
         if (error)
             return false;
 
-        JsonVariant maxRoomTemp = doc["maxRoomTemp"];
-        JsonVariant minTempDelta = doc["minTempDelta"];
-        JsonVariant tempLowestPwm = doc["tempLowestPwm"];
-        JsonVariant tempHighestPwm = doc["tempHighestPwm"];
+        JsonVariant pMin = doc["pMin"];
+        JsonVariant pMax = doc["pMax"];
+        JsonVariant tRoomMin = doc["tRoomMin"];
+        JsonVariant tHeatMin = doc["tHeatMin"];
+        JsonVariant hostName = doc["hostName"];
 
-        if (maxRoomTemp.isNull() || minTempDelta.isNull() || tempLowestPwm.isNull() || tempHighestPwm.isNull())
+        if (pMin.isNull() || pMax.isNull() || tRoomMin.isNull() || tHeatMin.isNull() || hostName.isNull())
             return false;
 
-        output.MaxRoomTemp = maxRoomTemp;
-        output.MinTempDelta = minTempDelta;
-        output.TempLowestPWM = tempLowestPwm;
-        output.TempHighestPWM = tempHighestPwm;
+        output.PMin = pMin;
+        output.PMax = pMax;
+        output.TRoomMin = tRoomMin;
+        output.THeatMin = tHeatMin;
+
+        // memcpy hostname with some boundary checking
+        const char *hostNameCstr = doc["hostName"];
+        memcpy(output.HostName, hostNameCstr, min(strlen(hostNameCstr), (size_t)sizeof(output.HostName)));
+
         return true;
     }
 
