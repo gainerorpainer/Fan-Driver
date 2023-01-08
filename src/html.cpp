@@ -1,6 +1,8 @@
 #include "html.h"
 
 #include "parameters.h"
+#include "control_page_html.h"
+#include "storage.h"
 
 namespace Html
 {
@@ -17,7 +19,7 @@ namespace Html
 
     void onGetHome()
     {
-        _server->send(200, "text/plain", "HOME");
+        _server->send(200, "text/html", CONTROL_PAGE_HTML);
     }
 
     void onGetStatus()
@@ -28,7 +30,7 @@ namespace Html
         return;
     }
 
-    void onGetOrPostSettings()
+    void onGetOrPostParameters()
     {
         if (_server->method() == HTTP_GET)
         {
@@ -41,11 +43,26 @@ namespace Html
 
         if (_server->method() == HTTP_POST)
         {
+            // try find FORM parameter
+            if (!_server->hasArg("parameters"))
+            {
+                _server->send(403, "text/plain", "Missing FORM parameter: \"parameters\"");
+                return;
+            }
+
+            if (!Parameters::TryParse(_server->arg("parameters").c_str(), *_parameters))
+            {
+                _server->send(403, "text/plain", "Bad JSON");
+                return;
+            }
+
+            Storage::Store(*_parameters);
+
             _server->send(200, "text/plain", "OK");
             return;
         }
 
-        _server->send(403, "text/plain", "BAD METHOD");
+        _server->send(403, "text/plain", "Use GET or POST");
     }
 
 }

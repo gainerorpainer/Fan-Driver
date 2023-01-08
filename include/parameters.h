@@ -28,5 +28,5 @@ namespace Parameters
     /// @param input the string to parse
     /// @param output unchanged or if true is returned, the parsed data
     /// @return true if successful
-    bool TryParse(char *input, Parameters &output);
+    bool TryParse(char const *input, Parameters &output);
 }

@@ -8,12 +8,13 @@
 #include "parameters.h"
 #include "status.h"
 #include "html.h"
+#include "storage.h"
 
-// #define FEATURE_TEMPINPUTS
+#define FEATURE_TEMPINPUTS
 #define FEATURE_WIFI
 
 /// @brief used to control fan
-constexpr byte PWM_PIN = 9;
+constexpr byte PWM_PIN = D8;
 
 /// @brief wifi data
 const struct
@@ -66,9 +67,13 @@ void setup()
   // setup modules
   Inputs::Setup();
   Html::setup(_server, _parameters, _status);
+  Storage::Setup();
 
   // activate LED
   pinMode(LED_BUILTIN, OUTPUT);
+
+  // load parameters
+  _parameters = Storage::Load();
 
   // wifi setup
   WiFi.mode(WIFI_STA);
@@ -90,7 +95,7 @@ void setup()
   // HTML ressource mapping
   _server.on("/", Html::onGetHome);
   _server.on("/status", Html::onGetStatus);
-  _server.on("/settings", Html::onGetOrPostSettings);
+  _server.on("/parameters", Html::onGetOrPostParameters);
   // 404
   _server.onNotFound([]()
                      { _server.send(404, "text/plain", "Not Found"); });
@@ -99,6 +104,10 @@ void setup()
                   { Serial.printf("HTML %s %s\n", method.c_str(), url.c_str());
                   return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE; });
   _server.begin();
+
+  // set watchdog to 2 seconds since modules block relatively long
+  ESP.wdtDisable();
+  ESP.wdtEnable(2000);
 }
 
 /// @brief LOOP

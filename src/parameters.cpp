@@ -19,9 +19,26 @@ namespace Parameters
         return serializeJson(doc, _jsonBuffer);
     }
 
-    bool TryParse(char *input, Parameters &output)
+    bool TryParse(char const *input, Parameters &output)
     {
-        return false;
+        StaticJsonDocument<JSON_BUFFER_SIZE> doc;
+        DeserializationError const error = deserializeJson(doc, input);
+        if (error)
+            return false;
+
+        JsonVariant maxRoomTemp = doc["maxRoomTemp"];
+        JsonVariant minTempDelta = doc["minTempDelta"];
+        JsonVariant tempLowestPwm = doc["tempLowestPwm"];
+        JsonVariant tempHighestPwm = doc["tempHighestPwm"];
+
+        if (maxRoomTemp.isNull() || minTempDelta.isNull() || tempLowestPwm.isNull() || tempHighestPwm.isNull())
+            return false;
+
+        output.MaxRoomTemp = maxRoomTemp;
+        output.MinTempDelta = minTempDelta;
+        output.TempLowestPWM = tempLowestPwm;
+        output.TempHighestPWM = tempHighestPwm;
+        return true;
     }
 
 }

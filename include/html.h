@@ -19,6 +19,6 @@ namespace Html
     /// @brief Handles GET /status
     void onGetStatus();
 
-    /// @brief Handles GET or POST /settings
-    void onGetOrPostSettings();
+    /// @brief Handles GET or POST /parameters
+    void onGetOrPostParameters();
 }
