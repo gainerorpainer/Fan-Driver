@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fan Driver Control</title>
+    <title>Fan Driver Controller</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
 
@@ -20,6 +20,11 @@
             opacity: 0.7;
         }
 
+        input[type=text],
+        input[type=number] {
+            text-align: end;
+        }
+
         .blockP {
             margin-left: 50%;
             margin-top: 50%;
@@ -29,25 +34,33 @@
         svg {
             margin-bottom: 6px;
         }
+
+        h1 {
+            text-align: center;
+        }
     </style>
 
 </head>
 
 <body>
-    <h1>Fan Driver Control</h1>
+    <h1>Fan Driver Controller</h1>
 
     <div class="container">
         <!--TOPs-->
         <div class="mb-3">
             <div class="row">
-                <div class="col">
+                <div class="col-2">
+                    <button class="btn btn-primary" onclick="refresh()">Werte aktualisieren</button>
+                </div>
+                <div class="col-2">
                     <input class="form-check-input" type="checkbox" value="" id="isConnected" checked>
                     <label class="form-check-label" for="isConnected">
                         Verbindung hergestellt
                     </label>
                 </div>
-                <div class="col">
-                    <button class="btn btn-primary" onclick="refresh()">Werte aktualisieren</button>
+                <div class="col-3">
+                    <label for="upTimeSeconds" class="form-label">System aktiv seit:</label>
+                    <input type="text" id="upTimeSeconds" size="10" placeholder="..." disabled /> s
                 </div>
             </div>
 
@@ -66,13 +79,13 @@
         </svg>
         <div class="mb-3">
             <div class="row">
-                <div class="col">
-                    <label for="heaterTemp" class="form-label">Heizungstemperatur:</label>
-                    <input class="form-control" id="heaterTemp" type="text" placeholder="Warte auf Daten..." disabled>
-                </div>
-                <div class="col">
+                <div class="col-4">
                     <label for="roomTemp" class="form-label">Raumtemperatur:</label>
-                    <input class="form-control" id="roomTemp" type="text" placeholder="Warte auf Daten..." disabled>
+                    <input type="text" id="roomTemp" size="3" placeholder="..." disabled /> °C
+                </div>
+                <div class="col-4">
+                    <label for="heaterTemp" class="form-label">Heizungstemperatur:</label>
+                    <input type="text" id="heaterTemp" size="3" placeholder="..." disabled /> °C
                 </div>
             </div>
 
@@ -82,7 +95,7 @@
         <hr />
         <br />
 
-        <!--MANUAL POWER-->
+        <!--FAN POWER-->
         <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" fill="blue" class="bi bi-fan"
             viewBox="0 0 16 16">
             <path
@@ -91,15 +104,38 @@
         </svg>
         <div class="mb-3">
             <div class="row">
-                <div class="col-8">
-                    <label for="roomTemp" class="form-label">Manuell eingestellte Leistung:</label>
+                <div class="col-6">
+                    <div class="row">
+                        <label for="currentPowerPerc" class="form-label">Aktuelle Lüfterleistung:</label>
+                    </div>
+                    <div class="row">
+                        <div class="col-4">
+                            <input class="form-control" id="currentPowerPerc" type="range" min="0" max="100" value="0"
+                                disabled>
+                        </div>
+                        <div class="col-4">
+                            <input type="text" id="currentPowerPerc_label" size="3" placeholder="..." disabled /> %
+                        </div>
+                        <div class="col-4">
+                            <input type="text" id="currentPowerPwm" size="3" placeholder="..." disabled /> / 255
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-6">
+                    <hr />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-2">
+                    <label for="manualPowerPerc" class="form-label">Manuell eingestellte Leistung:</label>
                     <input class="form-control" id="manualPowerPerc" type="range" min="1" max="100" value="0"
                         onchange="SetManualPower(this.value)">
                 </div>
-                <div class="col-4">
-                    <label for="roomTemp" class="form-label">Manuelle Steuerung aktiv für:</label>
-                    <input class="form-control" id="manualSecondsLeft" type="text" placeholder="Warte auf Daten..."
-                        disabled>
+                <div class="col-2">
+                    <label for="manualSecondsLeft" class="form-label">Manuelle Steuerung aktiv für:</label>
+                    <input type="text" id="manualSecondsLeft" size="3" placeholder="..." disabled /> s
                 </div>
 
             </div>
@@ -185,9 +221,13 @@
         function refresh() {
             _lock_screen();
             $.get("/status", function (data, status) {
-                $('#heaterTemp').val(data.heaterTemp);
-                $('#roomTemp').val(data.roomTemp);
-                $('#roomTemp').val(data.roomTemp);
+                $('#heaterTemp').val(data.heaterTemp.toFixed(1));
+                $('#roomTemp').val(data.roomTemp.toFixed(1));
+                $('#currentPowerPwm').val(data.currentPowerPwm);
+                $('#currentPowerPerc, #currentPowerPerc_label').val(data.currentPowerPerc);
+                $('#manualPowerPerc').val(data.manualPowerPerc);
+                $('#manualSecondsLeft').val(data.manualSecondsLeft);
+                $('#upTimeSeconds').val(data.upTimeSeconds);
             })
                 .done(function () { _refreshParameters(); });
         }
@@ -207,7 +247,7 @@
 
         function SetManualPower(percent) {
             _lock_screen();
-            $.post("/manualPower", { percent: percent })
+            $.post("/manual", { percent: percent })
                 .done(function () { _unlock_screen(); refresh(); });
         }
     </script>

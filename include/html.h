@@ -16,9 +16,15 @@ namespace Html
     /// @brief Handles GET /
     void onGetHome();
 
+    /// @brief Handles GET /favicon.ico
+    void onGetFavicon();
+
     /// @brief Handles GET /status
     void onGetStatus();
 
     /// @brief Handles GET or POST /parameters
     void onGetOrPostParameters();
+
+    /// @brief Handles POST /manual
+    void onManualOverride();
 }

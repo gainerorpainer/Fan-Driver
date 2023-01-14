@@ -7,26 +7,27 @@ namespace Storage
 {
     void Setup()
     {
-        EEPROM.begin(sizeof(Parameters::Parameters));
+        // EEPROM contains Parameters PLUS CRC
+        EEPROM.begin(sizeof(Parameters::Parameters) + 1);
     }
 
-    uint8_t _CrcOf(Parameters::Parameters const &input)
+    byte _CrcOf(Parameters::Parameters const &input)
     {
-        return crc8(reinterpret_cast<uint8_t const *>(&input), sizeof(input));
+        return crc8(reinterpret_cast<byte const *>(&input), sizeof(input));
     }
 
     bool Load(Parameters::Parameters &output)
     {
         EEPROM.get(0, output);
-        uint8_t const presentCrc = EEPROM.read(sizeof(output));
 
-        return presentCrc == _CrcOf(output);
+        return EEPROM.read(sizeof(output)) == _CrcOf(output);
     }
 
     void Store(Parameters::Parameters const &parameters)
     {
         EEPROM.put(0, parameters);
-        EEPROM.write(sizeof(parameters), _CrcOf(parameters));
+        EEPROM.put(sizeof(parameters), _CrcOf(parameters));
+
         EEPROM.commit();
     }
 }

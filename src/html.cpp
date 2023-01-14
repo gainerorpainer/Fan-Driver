@@ -1,8 +1,9 @@
 #include "html.h"
 
 #include "parameters.h"
-#include "control_page_html.h"
 #include "storage.h"
+#include "control_page_html.h"
+#include "favicon_html.h"
 
 namespace Html
 {
@@ -22,11 +23,16 @@ namespace Html
         _server->send(200, "text/html", CONTROL_PAGE_HTML);
     }
 
+    void onGetFavicon()
+    {
+        _server->send(200, "image/x-icon", FAVICON_CONTENT_HTML, sizeof(FAVICON_CONTENT_HTML));
+    }
+
     void onGetStatus()
     {
-        char *content;
+        String content;
         size_t const contentLength = Status::Serialize(*_status, content);
-        _server->send(200, "application/json", content, contentLength);
+        _server->send(200, "application/json", content.c_str(), contentLength);
         return;
     }
 
@@ -34,10 +40,10 @@ namespace Html
     {
         if (_server->method() == HTTP_GET)
         {
-            char *content;
+            String content;
             size_t const contentLength = Parameters::Serialize(*_parameters, content);
 
-            _server->send(200, "application/json", content, contentLength);
+            _server->send(200, "application/json", content.c_str(), contentLength);
             return;
         }
 
@@ -65,4 +71,33 @@ namespace Html
         _server->send(403, "text/plain", "Use GET or POST");
     }
 
+    void onManualOverride()
+    {
+        if (_server->method() != HTTP_POST)
+        {
+            _server->send(403, "text/plain", "Use POST");
+            return;
+        }
+
+        // try find FORM parameter
+        if (!_server->hasArg("percent"))
+        {
+            _server->send(403, "text/plain", "Missing FORM parameter: \"percent\"");
+            return;
+        }
+
+        int const parsedPercent = atoi(_server->arg("percent").c_str());
+        if (parsedPercent < 0 || parsedPercent > 100)
+        {
+            _server->send(403, "text/plain", "Bad \"percent\" parameter value: valid range is 0..100");
+            return;
+        }
+
+        // set override for the next 30 seconds
+        _status->ManualPowerPerc = parsedPercent;
+        _status->ManualSecondsLeft = 30;
+
+        _server->send(200, "text/plain", "OK");
+        return;
+    }
 }

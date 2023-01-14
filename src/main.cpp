@@ -9,8 +9,7 @@
 #include "status.h"
 #include "html.h"
 #include "storage.h"
-
-#define FEATURE_TEMPINPUTS
+#include "uptime.h"
 
 /// @brief used to control fan
 constexpr byte PWM_PIN = D8;
@@ -75,6 +74,8 @@ void setup()
   if (!Storage::Load(_parameters))
   // no storage found
   {
+    Serial.println("Storage empty, generating...");
+
     _parameters = Parameters::Parameters();
 
     // watch out for string length!
@@ -97,13 +98,19 @@ void setup()
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
+  // stay connected to wifi
+  WiFi.setAutoReconnect(true);
+  WiFi.persistent(true);
+
   // DNS
   MDNS.begin(_parameters.HostName);
 
   // HTML ressource mapping
   _server.on("/", Html::onGetHome);
+  _server.on("/favicon.ico", Html::onGetFavicon);
   _server.on("/status", Html::onGetStatus);
   _server.on("/parameters", Html::onGetOrPostParameters);
+  _server.on("/manual", Html::onManualOverride);
   // 404
   _server.onNotFound([]()
                      { _server.send(404, "text/plain", "Not Found"); });
@@ -126,39 +133,39 @@ void loop()
   delay(100);
   digitalWrite(LED_BUILTIN, LOW);
 
-  int fanPowerPerc = 0;
-
   // manual override?
   if (_status.ManualSecondsLeft > 0)
   {
     // tick down!
     _status.ManualSecondsLeft -= 1;
 
-    fanPowerPerc = _status.ManualPowerPerc;
+    _status.CurrentPowerPerc = _status.ManualPowerPerc;
   }
+  else
+  {
+    // get temp readings
+    auto const report = Inputs::Read();
+    _status.HeaterTemp = report.Temp1;
+    _status.RoomTemp = report.Temp2;
 
-#if defined(FEATURE_TEMPINPUTS)
-  // get temp readings
-  auto const report = Inputs::Read();
-  _status.HeaterTemp = report.Temp1;
-  _status.RoomTemp = report.Temp2;
+    // t1 = heater, t2 = room
+    _status.CurrentPowerPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
 
-  // t1 = heater, t2 = room
-  fanPowerPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
-
-  Serial.print("Heater: ");
-  Serial.print(_status.HeaterTemp, 1);
-  Serial.print(", Room: ");
-  Serial.print(_status.HeaterTemp, 1);
-  Serial.print(", PWM0..255: ");
-  Serial.println(fanPowerPerc);
-
-#endif
+    Serial.print("Heater: ");
+    Serial.print(_status.HeaterTemp, 1);
+    Serial.print(", Room: ");
+    Serial.print(_status.HeaterTemp, 1);
+    Serial.print(", PWM0..255: ");
+    Serial.println(_status.CurrentPowerPerc);
+  }
 
   // apply fan power with respect to parameters
   // make use of higher integer precision
-  uint8_t const fanPowerPwm = map(100 * fanPowerPerc, 100 * (0), 100 * (100), _parameters., 255);
-  analogWrite(PWM_PIN, fanPowerPwm);
+  _status.CurrentPowerPwm = map(100 * _status.CurrentPowerPerc, 100 * (0), 100 * (100), _parameters.PMin, _parameters.PMax);
+  analogWrite(PWM_PIN, _status.CurrentPowerPwm);
+
+  // handle other things
+  _status.UpTimeSeconds = (int)(UpTime::Handle() / 1000ul);
 
   // handle html server & dns broadcast
   MDNS.update();

@@ -1,5 +1,9 @@
 #pragma once
 
+#include <inttypes.h>
+
+#include <ArduinoJson.h>
+
 namespace Parameters
 {
     /// @brief Global parameters (can be changed easily)
@@ -23,9 +27,9 @@ namespace Parameters
 
     /// @brief Turns parameters into a comma separates, dotted float string
     /// @param input the parameters to serialze
-    /// @param buffer will be set to an allocated char array
+    /// @param buffer will be cleared and written to
     /// @return the length of the string
-    int Serialize(Parameters const &input, char *&buffer);
+    int Serialize(Parameters const &input, String &buffer);
 
     /// @brief Attempts to parse aa comma separates, dotted float string
     /// @param input the string to parse
