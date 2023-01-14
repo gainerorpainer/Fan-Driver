@@ -42,7 +42,11 @@ namespace Parameters
 
         // memcpy hostname with some boundary checking
         const char *hostNameCstr = doc["hostName"];
-        memcpy(output.HostName, hostNameCstr, min(strlen(hostNameCstr), (size_t)sizeof(output.HostName)));
+        size_t const safeHostnameStrlen = min(strlen(hostNameCstr), (size_t)(sizeof(output.HostName) - 1));
+        memcpy(output.HostName, hostNameCstr, safeHostnameStrlen);
+
+        // terminate!
+        output.HostName[safeHostnameStrlen] = '\0';
 
         return true;
     }
