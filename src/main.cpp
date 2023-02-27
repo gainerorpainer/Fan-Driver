@@ -133,6 +133,11 @@ void loop()
   delay(100);
   digitalWrite(LED_BUILTIN, LOW);
 
+  // get temp readings
+  auto const report = Inputs::Read();
+  _status.HeaterTemp = report.Temp1;
+  _status.RoomTemp = report.Temp2;
+
   // manual override?
   if (_status.ManualSecondsLeft > 0)
   {
@@ -143,29 +148,27 @@ void loop()
   }
   else
   {
-    // get temp readings
-    auto const report = Inputs::Read();
-    _status.HeaterTemp = report.Temp1;
-    _status.RoomTemp = report.Temp2;
-
     // t1 = heater, t2 = room
     _status.CurrentPowerPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
-
-    Serial.print("Heater: ");
-    Serial.print(_status.HeaterTemp, 1);
-    Serial.print(", Room: ");
-    Serial.print(_status.HeaterTemp, 1);
-    Serial.print(", PWM0..255: ");
-    Serial.println(_status.CurrentPowerPerc);
   }
 
   // apply fan power with respect to parameters
   // make use of higher integer precision
-  _status.CurrentPowerPwm = map(100 * _status.CurrentPowerPerc, 100 * (0), 100 * (100), _parameters.PMin, _parameters.PMax);
+  // make 0% == 0 PWM
+  _status.CurrentPowerPwm = _status.CurrentPowerPerc == 0 ? 0 : map(100 * _status.CurrentPowerPerc, 100 * (0), 100 * (100), _parameters.PMin, _parameters.PMax);
   analogWrite(PWM_PIN, _status.CurrentPowerPwm);
 
   // handle other things
   _status.UpTimeSeconds = (int)(UpTime::Handle() / 1000ul);
+
+  Serial.print("Heater: ");
+  Serial.print(_status.HeaterTemp, 1);
+  Serial.print(", Room: ");
+  Serial.print(_status.HeaterTemp, 1);
+  Serial.print(", P%: ");
+  Serial.print(_status.CurrentPowerPerc);
+  Serial.print(", P0..255: ");
+  Serial.println(_status.CurrentPowerPwm);
 
   // handle html server & dns broadcast
   MDNS.update();

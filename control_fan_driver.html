@@ -63,7 +63,15 @@
                     <input type="text" id="upTimeSeconds" size="10" placeholder="..." disabled /> s
                 </div>
             </div>
+        </div>
 
+        <br />
+        <hr />
+        <br />
+
+        <!--GRAPH-->
+        <div>
+            <canvas id="myChart"></canvas>
         </div>
 
         <br />
@@ -196,6 +204,158 @@
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-3.6.3.min.js">
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.1.1/chartjs-plugin-annotation.min.js"></script>
+
+    <script>
+        const ctx = document.getElementById("myChart");
+
+        const data = {
+            datasets: [
+                {
+                    label: "Aktuelle Situation",
+                    borderColor: "rgba(0,0,0)",
+                    pointBorderColor: "rgba(0,0,0)",
+                    backgroundColor: "rgba(0,0,0)",
+                    radius: 12,
+                    pointStyle: "circle",
+                    data: [
+                        {
+                            x: 0,
+                            y: 0,
+                        },
+                    ],
+                    backgroundColor: "rgb(255, 99, 132)",
+                },
+            ],
+        };
+
+        const x_min = 10;
+        const y_max = 10;
+
+        const annotations = {
+            warmRoom: {
+                type: "box",
+                backgroundColor: "rgba(255, 100, 100, 0.25)",
+                borderWidth: 0,
+                xMin: x_min,
+                yMin: y_max,
+                label: {
+                    display: true,
+                    textAlign: "center",
+                    content: ["0%:", "warmer Raum"],
+                    position: { x: "center", y: "center" },
+                    color: "rgba(255, 100, 100)",
+                },
+            },
+
+            coldHeater: {
+                type: "box",
+                backgroundColor: "rgba(100, 100, 100, 0.25)",
+                borderWidth: 0.25,
+                yMax: y_max,
+                label: {
+                    display: true,
+                    textAlign: "center",
+                    content: ["0%:", "Heizkörper zu kalt"],
+                    color: "rgba(100, 100, 100)",
+                },
+            },
+
+            controlBox: {
+                type: "box",
+                backgroundColor: "rgba(255, 120, 0, 0.25)",
+                borderWidth: 0,
+                xMin: x_min - 1,
+                xMax: x_min,
+                yMin: y_max,
+                label: {
+                    display: true,
+                    textAlign: "center",
+                    content: ["100% - 0%", "Regelung"],
+                    color: "rgba(255, 120, 0)",
+                },
+            },
+
+            fullPowerBox: {
+                type: "box",
+                backgroundColor: "rgba(0, 0, 255, 0.25)",
+                borderWidth: 0,
+                xMax: x_min - 1,
+                yMin: y_max,
+                label: {
+                    display: true,
+                    textAlign: "center",
+                    content: ["100%:", "kalter Raum"],
+                    color: "rgba(0, 0, 255)",
+                },
+            },
+        };
+
+        chart = new Chart(ctx, {
+            type: "scatter",
+            options: {
+                scales: {
+                    x: {
+                        suggestedMin: 15,
+                        suggestedMax: 24,
+                        title: {
+                            display: true,
+                            text: "Raum [°C]",
+                        },
+                    },
+                    y: {
+                        suggestedMin: 15,
+                        suggestedMax: 50,
+                        title: {
+                            display: true,
+                            text: "Heizkörper [°C]",
+                        },
+                    },
+                },
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: "top",
+                        labels: {
+                            usePointStyle: true,
+                        },
+                    },
+                    title: {
+                        display: true,
+                        text: "Dashboard",
+                    },
+                    annotation: {
+                        annotations: annotations,
+                    },
+                },
+            },
+            data: data,
+        });
+
+        /// @brief Updates Graph with new values, while @ the same time 
+        function UpdateGraph(status, parameters) {
+
+            if (status != null) {
+                datapoint = chart.data.datasets[0].data[0];
+
+                datapoint.x = status.roomTemp;
+                datapoint.y = status.heaterTemp;
+            }
+
+            if (parameters != null) {
+                controlXMin = parameters.tRoomMin - 1;
+
+                annotations.warmRoom.xMin = annotations.controlBox.xMax = parameters.tRoomMin;
+                annotations.controlBox.xMin = annotations.fullPowerBox.xMax = controlXMin;
+                annotations.coldHeater.yMax = annotations.warmRoom.yMin = annotations.controlBox.yMin = annotations.fullPowerBox.yMin = parameters.tHeatMin;
+            }
+
+            chart.update();
+        }
+    </script>
+
     <script>
 
         function _lock_screen() {
@@ -214,8 +374,12 @@
                 $('#tRoomMin').val(data.tRoomMin);
                 $('#tHeatMin').val(data.tHeatMin);
                 $('#hostName').val(data.hostName);
+
+                UpdateGraph(null, data);
             })
-                .done(function () { _unlock_screen(); });
+                .done(function () {
+                    _unlock_screen();
+                });
         }
 
         function refresh() {
@@ -228,8 +392,12 @@
                 $('#manualPowerPerc').val(data.manualPowerPerc);
                 $('#manualSecondsLeft').val(data.manualSecondsLeft);
                 $('#upTimeSeconds').val(data.upTimeSeconds);
+
+                UpdateGraph(data, null);
             })
-                .done(function () { _refreshParameters(); });
+                .done(function () {
+                    _refreshParameters(data);
+                });
         }
 
         function postParameters() {
@@ -241,6 +409,9 @@
                 tHeatMin: $('#tHeatMin').val(),
                 hostName: $('#hostName').val()
             };
+
+            UpdateGraph(null, parameters);
+
             $.post("/parameters", { parameters: JSON.stringify(parameters) })
                 .done(function () { _unlock_screen(); });
         }
