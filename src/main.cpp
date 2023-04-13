@@ -164,7 +164,7 @@ void loop()
   Serial.print("Heater: ");
   Serial.print(_status.HeaterTemp, 1);
   Serial.print(", Room: ");
-  Serial.print(_status.HeaterTemp, 1);
+  Serial.print(_status.RoomTemp, 1);
   Serial.print(", P%: ");
   Serial.print(_status.CurrentPowerPerc);
   Serial.print(", P0..255: ");
