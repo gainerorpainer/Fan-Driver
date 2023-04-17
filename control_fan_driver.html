@@ -50,9 +50,6 @@
         <div class="mb-3">
             <div class="row">
                 <div class="col-2">
-                    <button class="btn btn-primary" onclick="refresh()">Werte aktualisieren</button>
-                </div>
-                <div class="col-2">
                     <input class="form-check-input" type="checkbox" value="" id="isConnected" checked>
                     <label class="form-check-label" for="isConnected">
                         Verbindung hergestellt
@@ -367,7 +364,7 @@
             $('#screenBlock').remove();
         }
 
-        function _refreshParameters() {
+        function _refreshParameters(lockScreen) {
             $.get("/parameters", function (data, status) {
                 $('#pMin').val(data.pMin);
                 $('#pMax').val(data.pMax);
@@ -378,15 +375,20 @@
                 UpdateGraph(null, data);
             })
                 .done(function () {
-                    _unlock_screen();
+                    if (lockScreen) {
+                        _unlock_screen();
+                    }
                 });
         }
 
-        function refresh() {
-            _lock_screen();
+        function refresh(lockScreen = false) {
+            if (lockScreen) {
+                _lock_screen();
+            }
+
             $.get("/status", function (data, status) {
-                $('#heaterTemp').val(data.heaterTemp.toFixed(1));
-                $('#roomTemp').val(data.roomTemp.toFixed(1));
+                $('#heaterTemp').val(data.heaterTemp?.toFixed(1) ?? "nan");
+                $('#roomTemp').val(data.roomTemp?.toFixed(1) ?? "nan");
                 $('#currentPowerPwm').val(data.currentPowerPwm);
                 $('#currentPowerPerc, #currentPowerPerc_label').val(data.currentPowerPerc);
                 $('#manualPowerPerc').val(data.manualPowerPerc);
@@ -396,7 +398,7 @@
                 UpdateGraph(data, null);
             })
                 .done(function () {
-                    _refreshParameters(data);
+                    _refreshParameters(lockScreen);
                 });
         }
 
@@ -419,8 +421,16 @@
         function SetManualPower(percent) {
             _lock_screen();
             $.post("/manual", { percent: percent })
-                .done(function () { _unlock_screen(); refresh(); });
+                .done(function () { _unlock_screen(); refresh(true); });
         }
+
+        $(function () {
+            // initial refresh
+            refresh(true);
+
+            // main refresh loop
+            setInterval(refresh, 5000);
+        })
     </script>
 </body>
 

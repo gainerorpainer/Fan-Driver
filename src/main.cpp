@@ -4,6 +4,8 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
+#include <CycleLimit.h>
+
 #include "inputs.h"
 #include "parameters.h"
 #include "status.h"
@@ -13,6 +15,9 @@
 
 /// @brief used to control fan
 constexpr byte PWM_PIN = D8;
+
+/// @brief Main loop cycle time
+constexpr int CYCLE_TIME_MS = 1000;
 
 /// @brief wifi data
 const struct
@@ -133,6 +138,10 @@ void loop()
   delay(100);
   digitalWrite(LED_BUILTIN, LOW);
 
+  // handle html server & dns broadcast
+  MDNS.update();
+  _server.handleClient();
+
   // get temp readings
   auto const report = Inputs::Read();
   _status.HeaterTemp = report.Temp1;
@@ -161,19 +170,13 @@ void loop()
   // handle other things
   _status.UpTimeSeconds = (int)(UpTime::Handle() / 1000ul);
 
-  Serial.print("Heater: ");
-  Serial.print(_status.HeaterTemp, 1);
-  Serial.print(", Room: ");
-  Serial.print(_status.RoomTemp, 1);
-  Serial.print(", P%: ");
-  Serial.print(_status.CurrentPowerPerc);
-  Serial.print(", P0..255: ");
-  Serial.println(_status.CurrentPowerPwm);
-
-  // handle html server & dns broadcast
-  MDNS.update();
-  _server.handleClient();
-
   // cycle length
-  delay(1000);
+  static CycleLimit::CycleLimit cycleLimit{CYCLE_TIME_MS};
+  auto const msToDelay = cycleLimit.getWaitMsForNextCycle();
+  if (msToDelay)
+    delay(msToDelay);
+
+  // printouts
+  Serial.printf("Heater: %0.1f, Room: %0.1f, P: %i\n", _status.HeaterTemp, _status.RoomTemp, _status.CurrentPowerPwm);
+  Serial.printf("CPU load: %i%%\n", 100 - (msToDelay * 100) / 1000);
 }

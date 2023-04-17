@@ -2,8 +2,8 @@
 
 #include "parameters.h"
 #include "storage.h"
-#include "control_page_html.h"
-#include "favicon_html.h"
+#include "static_html_mainpage.h"
+#include "static_html_favicon.h"
 
 namespace Html
 {
@@ -20,12 +20,12 @@ namespace Html
 
     void onGetHome()
     {
-        _server->send(200, "text/html", CONTROL_PAGE_HTML);
+        _server->send(200, "text/html", STATIC_HTML_MAINPAGE);
     }
 
     void onGetFavicon()
     {
-        _server->send(200, "image/x-icon", FAVICON_CONTENT_HTML, sizeof(FAVICON_CONTENT_HTML));
+        _server->send(200, "image/x-icon", STATIC_HTML_FAVICON, sizeof(STATIC_HTML_FAVICON));
     }
 
     void onGetStatus()
