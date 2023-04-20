@@ -426,7 +426,7 @@ static const char STATIC_HTML_MAINPAGE[] ICACHE_RODATA_ATTR =
 "        function SetManualPower(percent) {\r\n"
 "            _lock_screen();\r\n"
 "            $.post(\"/manual\", { percent: percent })\r\n"
-"                .done(function () { _unlock_screen(); refresh(); });\r\n"
+"                .done(function () { _unlock_screen(); refresh(true); });\r\n"
 "        }\r\n"
 "\r\n"
 "        $(function () {\r\n"

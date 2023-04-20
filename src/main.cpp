@@ -2,7 +2,7 @@
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <ArduinoOTA.h>
 
 #include <CycleLimit.h>
 
@@ -58,6 +58,18 @@ float CalcFanPowerPerc(float heaterTemp, float roomTemp)
   return isnan(pwm) ? 100 : max(min(pwm, 100.0f), 0.0f);
 }
 
+void busyWaitWifiConnected()
+{
+  Serial.print("Wait for Wifi");
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(500);
+    digitalWrite(LED_BUILTIN, HIGH);
+    Serial.print(".");
+  }
+}
+
 /// @brief SETUP
 void setup()
 {
@@ -91,24 +103,33 @@ void setup()
 
   // wifi setup
   WiFi.mode(WIFI_STA);
+  // stay connected to wifi
+  WiFi.persistent(true);
   WiFi.begin(WIFI_SERVER_SETUP.Ssid, WIFI_SERVER_SETUP.Password);
-  Serial.print("Wait for Wifi");
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    digitalWrite(LED_BUILTIN, LOW);
-    delay(500);
-    digitalWrite(LED_BUILTIN, HIGH);
-    Serial.print(".");
-  }
+  busyWaitWifiConnected();
   Serial.print("IP address: ");
   Serial.println(WiFi.localIP());
 
-  // stay connected to wifi
-  WiFi.setAutoReconnect(true);
-  WiFi.persistent(true);
-
-  // DNS
-  MDNS.begin(_parameters.HostName);
+  // setup ota updates
+  ArduinoOTA.setPassword("sjalw8589slxcmcxyie2980tnsdas");
+  ArduinoOTA.onStart([]()
+                     {
+      String type = ArduinoOTA.getCommand() == U_FLASH ? "sketch" : "filesystem";
+      Serial.println("Start updating " + type); });
+  ArduinoOTA.onEnd([]()
+                   { Serial.println("\nEnd"); });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total)
+                        { Serial.printf("Progress: %u%%\r", (progress / (total / 100))); });
+  ArduinoOTA.onError([](ota_error_t error)
+                     {
+      Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) Serial.println("Auth Failed");
+      else if (error == OTA_BEGIN_ERROR) Serial.println("Begin Failed");
+      else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
+      else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
+      else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
+  ArduinoOTA.setHostname(_parameters.HostName);
+  ArduinoOTA.begin(true); // useMDNS
 
   // HTML ressource mapping
   _server.on("/", Html::onGetHome);
@@ -130,18 +151,8 @@ void setup()
   ESP.wdtEnable(2000);
 }
 
-/// @brief LOOP
-void loop()
+void cycle1Hz()
 {
-  // blink
-  digitalWrite(LED_BUILTIN, HIGH);
-  delay(100);
-  digitalWrite(LED_BUILTIN, LOW);
-
-  // handle html server & dns broadcast
-  MDNS.update();
-  _server.handleClient();
-
   // get temp readings
   auto const report = Inputs::Read();
   _status.HeaterTemp = report.Temp1;
@@ -170,13 +181,31 @@ void loop()
   // handle other things
   _status.UpTimeSeconds = (int)(UpTime::Handle() / 1000ul);
 
-  // cycle length
-  static CycleLimit::CycleLimit cycleLimit{CYCLE_TIME_MS};
-  auto const msToDelay = cycleLimit.getWaitMsForNextCycle();
-  if (msToDelay)
-    delay(msToDelay);
-
   // printouts
   Serial.printf("Heater: %0.1f, Room: %0.1f, P: %i\n", _status.HeaterTemp, _status.RoomTemp, _status.CurrentPowerPwm);
-  Serial.printf("CPU load: %i%%\n", 100 - (msToDelay * 100) / 1000);
+}
+
+/// @brief LOOP
+void loop()
+{
+  // blink
+  digitalWrite(LED_BUILTIN, HIGH);
+  delay(100);
+
+  // handle regular things in a busy loop
+  _server.handleClient();
+  ArduinoOTA.handle();
+
+  // cycle length
+  static CycleLimit::CycleLimit cycleLimit{CYCLE_TIME_MS};
+  if (cycleLimit.IsCycleCooledDown())
+    cycle1Hz();
+
+  digitalWrite(LED_BUILTIN, LOW);
+
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    WiFi.reconnect();
+    busyWaitWifiConnected();
+  }
 }
