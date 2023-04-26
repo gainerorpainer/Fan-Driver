@@ -22,8 +22,8 @@ namespace Status
         /// @brief if >0, the seconds left in manual mode
         byte ManualSecondsLeft = 0;
 
-        /// @brief the time that the system has been running
-        unsigned int UpTimeSeconds = 0;
+        /// @brief How many times a reconnect to wifi happenend
+        int NumReconnects = 0;
     };
 
     /// @brief Turns a status into a string

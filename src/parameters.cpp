@@ -15,7 +15,6 @@ namespace Parameters
         doc["pMax"] = input.PMax;
         doc["tRoomMin"] = input.TRoomMin;
         doc["tHeatMin"] = input.THeatMin;
-        doc["hostName"] = input.HostName;
         return serializeJson(doc, buffer);
     }
 
@@ -30,23 +29,14 @@ namespace Parameters
         JsonVariant pMax = doc["pMax"];
         JsonVariant tRoomMin = doc["tRoomMin"];
         JsonVariant tHeatMin = doc["tHeatMin"];
-        JsonVariant hostName = doc["hostName"];
 
-        if (pMin.isNull() || pMax.isNull() || tRoomMin.isNull() || tHeatMin.isNull() || hostName.isNull())
+        if (pMin.isNull() || pMax.isNull() || tRoomMin.isNull() || tHeatMin.isNull())
             return false;
 
         output.PMin = pMin;
         output.PMax = pMax;
         output.TRoomMin = tRoomMin;
         output.THeatMin = tHeatMin;
-
-        // memcpy hostname with some boundary checking
-        const char *hostNameCstr = doc["hostName"];
-        size_t const safeHostnameStrlen = min(strlen(hostNameCstr), (size_t)(sizeof(output.HostName) - 1));
-        memcpy(output.HostName, hostNameCstr, safeHostnameStrlen);
-
-        // terminate!
-        output.HostName[safeHostnameStrlen] = '\0';
 
         return true;
     }

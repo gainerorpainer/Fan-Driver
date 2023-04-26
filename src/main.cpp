@@ -79,13 +79,13 @@ void setup()
   // set fast-PWM to highest possible frequency of 40k
   analogWriteFreq(40000);
 
+  // activate LED
+  pinMode(LED_BUILTIN, OUTPUT);
+
   // setup modules
   Inputs::Setup();
   Html::setup(_server, _parameters, _status);
   Storage::Setup();
-
-  // activate LED
-  pinMode(LED_BUILTIN, OUTPUT);
 
   // load parameters
   if (!Storage::Load(_parameters))
@@ -94,9 +94,6 @@ void setup()
     Serial.println("Storage empty, generating...");
 
     _parameters = Parameters::Parameters();
-
-    // watch out for string length!
-    sprintf(_parameters.HostName, "FanDriver_%i", (int)random(0, 1000));
 
     Storage::Store(_parameters);
   }
@@ -128,8 +125,7 @@ void setup()
       else if (error == OTA_CONNECT_ERROR) Serial.println("Connect Failed");
       else if (error == OTA_RECEIVE_ERROR) Serial.println("Receive Failed");
       else if (error == OTA_END_ERROR) Serial.println("End Failed"); });
-  ArduinoOTA.setHostname(_parameters.HostName);
-  ArduinoOTA.begin(true); // useMDNS
+  ArduinoOTA.begin(false); // no useMDNS!
 
   // HTML ressource mapping
   _server.on("/", Html::onGetHome);
@@ -145,10 +141,6 @@ void setup()
                   { Serial.printf("HTML %s %s\n", method.c_str(), url.c_str());
                   return ESP8266WebServer::CLIENT_REQUEST_CAN_CONTINUE; });
   _server.begin();
-
-  // set watchdog to 2 seconds since modules block relatively long
-  ESP.wdtDisable();
-  ESP.wdtEnable(2000);
 }
 
 void cycle1Hz()
@@ -178,9 +170,6 @@ void cycle1Hz()
   _status.CurrentPowerPwm = _status.CurrentPowerPerc == 0 ? 0 : map(100 * _status.CurrentPowerPerc, 100 * (0), 100 * (100), _parameters.PMin, _parameters.PMax);
   analogWrite(PWM_PIN, _status.CurrentPowerPwm);
 
-  // handle other things
-  _status.UpTimeSeconds = (int)(UpTime::Handle() / 1000ul);
-
   // printouts
   Serial.printf("Heater: %0.1f, Room: %0.1f, P: %i\n", _status.HeaterTemp, _status.RoomTemp, _status.CurrentPowerPwm);
 }
@@ -197,15 +186,18 @@ void loop()
   ArduinoOTA.handle();
 
   // cycle length
-  static CycleLimit::CycleLimit cycleLimit{CYCLE_TIME_MS};
-  if (cycleLimit.IsCycleCooledDown())
+  static CycleLimit::CycleLimit cycle1s{CYCLE_TIME_MS};
+  if (cycle1s.IsCycleCooledDown())
     cycle1Hz();
 
-  digitalWrite(LED_BUILTIN, LOW);
-
-  if (WiFi.status() != WL_CONNECTED)
+  // check wifi status every 5s
+  static CycleLimit::CycleLimit cycle5s{CYCLE_TIME_MS};
+  if (cycle5s.IsCycleCooledDown() && (WiFi.status() != WL_CONNECTED))
   {
+    _status.NumReconnects += 1;
     WiFi.reconnect();
     busyWaitWifiConnected();
   }
+
+  digitalWrite(LED_BUILTIN, LOW);
 }

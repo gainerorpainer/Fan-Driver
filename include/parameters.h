@@ -20,9 +20,6 @@ namespace Parameters
 
         /// @brief The min heater temp at which control is enabled
         float THeatMin = 20;
-
-        /// @brief Make sure zero terminated and only 15 readable chars!
-        char HostName[16] = "FanDriver";
     };
 
     /// @brief Turns parameters into a comma separates, dotted float string

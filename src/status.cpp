@@ -10,13 +10,17 @@ namespace Status
         buffer.clear();
 
         DynamicJsonDocument doc{JSON_HEAP};
+
         doc["heaterTemp"] = input.HeaterTemp;
         doc["roomTemp"] = input.RoomTemp;
         doc["currentPowerPwm"] = input.CurrentPowerPwm;
         doc["currentPowerPerc"] = input.CurrentPowerPerc;
         doc["manualPowerPerc"] = input.ManualPowerPerc;
         doc["manualSecondsLeft"] = input.ManualSecondsLeft;
-        doc["upTimeSeconds"] = input.UpTimeSeconds;
+
+        doc["upTimeSeconds"] = millis() / 1000;
+        doc["freeHeap"] = ESP.getFreeHeap();
+
         return serializeJson(doc, buffer);
     }
 
