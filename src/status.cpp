@@ -14,7 +14,7 @@ namespace Status
         doc["heaterTemp"] = input.HeaterTemp;
         doc["roomTemp"] = input.RoomTemp;
         doc["currentPowerPwm"] = input.CurrentPowerPwm;
-        doc["currentPowerPerc"] = input.CurrentPowerPerc;
+        doc["currentPowerPerc"] = input.PowerRequestPerc;
         doc["manualPowerPerc"] = input.ManualPowerPerc;
         doc["manualSecondsLeft"] = input.ManualSecondsLeft;
 

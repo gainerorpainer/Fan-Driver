@@ -76,8 +76,8 @@ void setup()
   // activate Serial
   Serial.begin(115200);
 
-  // set fast-PWM to highest possible frequency of 40k
-  analogWriteFreq(40000);
+  // set fast-PWM to mid frequency of 16k
+  analogWriteFreq(16000);
 
   // activate LED
   pinMode(LED_BUILTIN, OUTPUT);
@@ -150,28 +150,51 @@ void cycle1Hz()
   _status.HeaterTemp = report.Temp1;
   _status.RoomTemp = report.Temp2;
 
+  // t1 = heater, t2 = room
+  _status.PowerRequestPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
+
   // manual override?
   if (_status.ManualSecondsLeft > 0)
   {
     // tick down!
     _status.ManualSecondsLeft -= 1;
+    _status.PowerRequestPerc = _status.ManualPowerPerc;
+  }
 
-    _status.CurrentPowerPerc = _status.ManualPowerPerc;
+  // detect that a startup is necessary
+  static int StartupCycles = 0;
+  static decltype(_status.PowerRequestPerc) LastRequest = 0;
+  if (
+      (StartupCycles <= 0)                         // if not in startup already
+      && (_status.PowerRequestPerc != LastRequest) // if power perc changed since last iteration
+      && (_status.PowerRequestPerc != 0))          // if not shut off
+  {
+    // add startup cycles
+    StartupCycles = 2;
+
+    // store at which request startup happened
+    LastRequest = _status.PowerRequestPerc;
+  }
+
+  // handle according to state
+  if (StartupCycles > 0)
+  {
+    // full power
+    StartupCycles--;
+    _status.CurrentPowerPwm = 255;
   }
   else
   {
-    // t1 = heater, t2 = room
-    _status.CurrentPowerPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
+    // apply fan power with respect to parameters
+    // make 0% == 0 PWM
+    _status.CurrentPowerPwm = _status.PowerRequestPerc == 0
+                                  ? 0
+                                  : map(_status.PowerRequestPerc, 0, 100, _parameters.PMin, _parameters.PMax);
   }
-
-  // apply fan power with respect to parameters
-  // make use of higher integer precision
-  // make 0% == 0 PWM
-  _status.CurrentPowerPwm = _status.CurrentPowerPerc == 0 ? 0 : map(100 * _status.CurrentPowerPerc, 100 * (0), 100 * (100), _parameters.PMin, _parameters.PMax);
   analogWrite(PWM_PIN, _status.CurrentPowerPwm);
 
   // printouts
-  Serial.printf("Heater: %0.1f, Room: %0.1f, P: %i\n", _status.HeaterTemp, _status.RoomTemp, _status.CurrentPowerPwm);
+  Serial.println(".");
 }
 
 /// @brief LOOP

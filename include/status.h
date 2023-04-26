@@ -11,16 +11,16 @@ namespace Status
         float RoomTemp;
 
         /// @brief Power in PWM
-        byte CurrentPowerPwm = 0;
+        int CurrentPowerPwm = 0;
 
         /// @brief Power in 0..255
-        byte CurrentPowerPerc = 0;
+        byte PowerRequestPerc = 0;
 
         /// @brief if manual override, to which value to override
         byte ManualPowerPerc = 0;
 
         /// @brief if >0, the seconds left in manual mode
-        byte ManualSecondsLeft = 0;
+        int ManualSecondsLeft = 0;
 
         /// @brief How many times a reconnect to wifi happenend
         int NumReconnects = 0;
