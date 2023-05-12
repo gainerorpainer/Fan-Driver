@@ -12,19 +12,13 @@
 #include "html.h"
 #include "storage.h"
 #include "uptime.h"
+#include "wifi_data.h"
 
 /// @brief used to control fan
 constexpr byte PWM_PIN = D8;
 
 /// @brief Main loop cycle time
 constexpr int CYCLE_TIME_MS = 1000;
-
-/// @brief wifi data
-const struct
-{
-  const char *Ssid = "Welahn24";
-  const char *Password = "34200359922680323403";
-} WIFI_SERVER_SETUP;
 
 // static publics
 Parameters::Parameters _parameters = {};

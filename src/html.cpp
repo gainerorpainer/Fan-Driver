@@ -93,9 +93,16 @@ namespace Html
             return;
         }
 
+        int const parsedSeconds = _server->hasArg("seconds") ? atoi(_server->arg("seconds").c_str()) : 60;
+        if (parsedSeconds < 0 || parsedSeconds > 3600)
+        {
+            _server->send(401, "text/plain", "Bad \"seconds\" parameter value: valid range is 0..3600");
+            return;
+        }
+
         // set override for the next 30 seconds
         _status->ManualPowerPerc = parsedPercent;
-        _status->ManualSecondsLeft = 30;
+        _status->ManualSecondsLeft = parsedSeconds;
 
         _server->send(200, "text/plain", "OK");
         return;

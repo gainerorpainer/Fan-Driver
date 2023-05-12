@@ -17,6 +17,7 @@ namespace Status
         doc["currentPowerPerc"] = input.PowerRequestPerc;
         doc["manualPowerPerc"] = input.ManualPowerPerc;
         doc["manualSecondsLeft"] = input.ManualSecondsLeft;
+        doc["numReconnects"] = input.NumReconnects;
 
         doc["upTimeSeconds"] = millis() / 1000;
         doc["freeHeap"] = ESP.getFreeHeap();
