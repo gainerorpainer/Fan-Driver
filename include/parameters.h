@@ -10,7 +10,7 @@ namespace Parameters
     struct Parameters
     {
         /// @brief The lowest power (in PWM) before the fans stop moving
-        uint8_t PMin = 50;
+        uint8_t PMin = 25;
 
         /// @brief The highest acceptable power (in PWM)
         uint8_t PMax = 255;

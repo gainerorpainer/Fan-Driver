@@ -45,11 +45,12 @@ float CalcFanPowerPerc(float heaterTemp, float roomTemp)
     return 0;
 
   // LERP within the interval [TRoomMin - 1; TRoomMin]
-  // increase integer precision
-  float pwm = map((int)(100.0f * roomTemp), (int)(100.0f * tRoomMinLerpBound), (int)(100.0f * _parameters.TRoomMin), 0, 100);
+  // increase accuracy
+  constexpr long F = 100;
+  float perc = map(roomTemp * F, tRoomMinLerpBound * F, _parameters.TRoomMin * F, 100 * F, 0 * F) / F;
 
   // sanity check & cap
-  return isnan(pwm) ? 100 : max(min(pwm, 100.0f), 0.0f);
+  return isnan(perc) ? 100 : max(min(perc, 100.0f), 0.0f);
 }
 
 void busyWaitWifiConnected()
@@ -145,7 +146,7 @@ void cycle1Hz()
   _status.RoomTemp = report.Temp2;
 
   // t1 = heater, t2 = room
-  _status.PowerRequestPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
+  _status.PowerRequestPerc = CalcFanPowerPerc(_status.HeaterTemp, _status.RoomTemp);
 
   // manual override?
   if (_status.ManualSecondsLeft > 0)
@@ -163,19 +164,21 @@ void cycle1Hz()
       && (_status.PowerRequestPerc != LastRequest) // if power perc changed since last iteration
       && (_status.PowerRequestPerc != 0))          // if not shut off
   {
-    // add startup cycles
-    StartupCycles = 2;
+    // only add startup cycles if increased
+    if (_status.PowerRequestPerc > LastRequest)
+      StartupCycles = 2;
 
-    // store at which request startup happened
+    // store for next iteration
     LastRequest = _status.PowerRequestPerc;
   }
 
   // handle according to state
+  auto const mappedPowerPwm = map(_status.PowerRequestPerc, 0, 100, _parameters.PMin, _parameters.PMax);
   if (StartupCycles > 0)
   {
-    // full power
+    // good amount of power to start non-running
     StartupCycles--;
-    _status.CurrentPowerPwm = 255;
+    _status.CurrentPowerPwm = max(255l / 2, mappedPowerPwm);
   }
   else
   {
@@ -183,7 +186,7 @@ void cycle1Hz()
     // make 0% == 0 PWM
     _status.CurrentPowerPwm = _status.PowerRequestPerc == 0
                                   ? 0
-                                  : map(_status.PowerRequestPerc, 0, 100, _parameters.PMin, _parameters.PMax);
+                                  : mappedPowerPwm;
   }
   analogWrite(PWM_PIN, _status.CurrentPowerPwm);
 
