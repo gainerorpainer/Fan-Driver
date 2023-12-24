@@ -13,7 +13,7 @@ namespace Storage
 
     byte _CrcOf(Parameters::Parameters const &input)
     {
-        return crc8(reinterpret_cast<byte const *>(&input), sizeof(input));
+        return calcCRC8(reinterpret_cast<byte const *>(&input), sizeof(input));
     }
 
     bool Load(Parameters::Parameters &output)

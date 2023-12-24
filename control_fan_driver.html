@@ -178,23 +178,23 @@
             <div class="row">
                 <div class="col">
                     <label for="pMin" class="form-label">Leistungsuntergrenze bevor Lüfter stehen bleiben:</label>
-                    <input class="form-control" id="pMin" type="range" min="0" max="255" step="1" disabled>
+                    <input class="form-control" id="pMin" type="range" min="0" max="255" step="1" onchange="lock_parameters()" disabled>
                 </div>
 
                 <div class="col">
                     <label for="pMax" class="form-label">Akzeptable Leistungsobergrenze:</label>
-                    <input class="form-control" id="pMax" type="range" min="0" max="255" value="255" step="1">
+                    <input class="form-control" id="pMax" type="range" min="0" max="255" value="255" step="1" onchange="lock_parameters()">
                 </div>
 
                 <div class="col">
                     <label for="tRoomMin" class="form-label">Zu erreichende Raumtemperatur:</label>
-                    <input class="form-control" id="tRoomMin" type="number" min="0" max="30" placeholder="z.B. 22.0 °C">
+                    <input class="form-control" id="tRoomMin" type="number" min="0" max="30" step="0.1" placeholder="z.B. 22.0 °C" onchange="lock_parameters()">
                 </div>
 
                 <div class="col">
                     <label for="tHeatMin" class="form-label">Minimale Heizungstemperatur um aktiv zu sein:</label>
-                    <input class="form-control" id="tHeatMin" type="number" min="20" max="60" placeholder="z.B. 30.0 °C"
-                        step="0.1">
+                    <input class="form-control" id="tHeatMin" type="number" min="20" max="60" step="0.1" placeholder="z.B. 30.0 °C"
+                        step="0.1" onchange="lock_parameters()">
                 </div>
             </div>
 
@@ -365,6 +365,7 @@
     </script>
 
     <script>
+        _Lock_Parameters = false;
 
         function _lock_screen() {
             $('<div id="screenBlock" class="blockDiv"><p class="blockP">Lade...</p></div>').appendTo('body');
@@ -375,7 +376,22 @@
             $('#screenBlock').remove();
         }
 
+        function lock_parameters()
+        {
+            _Lock_Parameters = true;
+        }
+
+        function unlock_parameters()
+        {
+            _Lock_Parameters = false;
+        }
+
         function _refreshParameters(lockScreen) {
+            if (_Lock_Parameters)
+            {
+                return;
+            }
+
             $.get("/parameters", function (data, status) {
                 $('#pMin').val(data.pMin);
                 $('#pMax').val(data.pMax);
@@ -442,6 +458,8 @@
             };
 
             UpdateGraph(null, parameters);
+
+            lock_parameters();
 
             $.post("/parameters", { parameters: JSON.stringify(parameters) })
                 .done(function () { _unlock_screen(); });

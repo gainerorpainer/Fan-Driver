@@ -191,6 +191,22 @@ void cycle1Hz()
   Serial.println(".");
 }
 
+void waitWifiConnected(unsigned long timeOutMs = (unsigned long)-1)
+{
+  Serial.print("Wait for Wifi");
+  auto const startOfCycle = millis();
+  while (WiFi.status() != WL_CONNECTED)
+  {
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(500); // this is important to yield for the watchdog
+    digitalWrite(LED_BUILTIN, HIGH);
+    Serial.print(".");
+
+    if ((millis() - startOfCycle) > timeOutMs)
+      return;
+  }
+}
+
 /// @brief LOOP
 void loop()
 {
@@ -209,11 +225,23 @@ void loop()
 
   // check wifi status every 5s
   static CycleLimit::CycleLimit cycle5s{CYCLE_TIME_MS};
-  if (cycle5s.IsCycleCooledDown() && (WiFi.status() != WL_CONNECTED))
+  if (cycle5s.IsCycleCooledDown())
   {
-    _status.NumReconnects += 1;
-    WiFi.reconnect();
-    busyWaitWifiConnected();
+    static bool isConnected = false;
+    if (WiFi.status() == WL_CONNECTED)
+    {
+      isConnected = true;
+    }
+    else
+    {
+      if (isConnected)
+      {
+        isConnected = false;
+        _status.NumReconnects += 1;
+      }
+      WiFi.reconnect();
+      waitWifiConnected(5000); // do not wait longer than 5000ms!
+    }
   }
 
   digitalWrite(LED_BUILTIN, LOW);
