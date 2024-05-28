@@ -157,25 +157,20 @@ void cycle1Hz()
 
   // detect that a startup is necessary
   static int StartupCycles = 0;
-  static decltype(_status.PowerRequestPerc) LastRequest = 0;
-  if (
-      (StartupCycles <= 0)                         // if not in startup already
-      && (_status.PowerRequestPerc != LastRequest) // if power perc changed since last iteration
-      && (_status.PowerRequestPerc != 0))          // if not shut off
-  {
+  const int FANKICKER_MINUTES_COOLDOWN = 60; // limiter for 60 minutes
+  // minutes -> seconds -> millis
+  static CycleLimit::CycleLimit limitStartups{1000 * 60 * FANKICKER_MINUTES_COOLDOWN}; 
+  // do not make startups too often, unless the last request was "stopped"
+  if (limitStartups.IsCycleCooledDown())
     // add startup cycles
-    StartupCycles = 2;
-
-    // store at which request startup happened
-    LastRequest = _status.PowerRequestPerc;
-  }
+    StartupCycles = 1;
 
   // handle according to state
   if (StartupCycles > 0)
   {
     // full power
     StartupCycles--;
-    _status.CurrentPowerPwm = 255;
+    _status.CurrentPowerPwm = 100;
   }
   else
   {

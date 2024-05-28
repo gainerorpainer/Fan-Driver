@@ -2,7 +2,7 @@
 
 #include <DHT.h>
 
-// DHT11 at pin 2 & 3
+// DHT11 at pin 1 & 2
 DHT dht1(D1, DHT11);
 DHT dht2(D2, DHT11);
 
