@@ -1,5 +1,7 @@
 #include "html.h"
 
+#include <los.h>
+
 #include "parameters.h"
 #include "storage.h"
 #include "static_html_mainpage.h"
@@ -25,7 +27,7 @@ namespace Html
 
     void onGetFavicon()
     {
-        _server->send(200, "image/x-icon", STATIC_HTML_FAVICON, sizeof(STATIC_HTML_FAVICON));
+        _server->send(200, "image/x-icon", STATIC_HTML_FAVICON_CONTENT, sizeof(STATIC_HTML_FAVICON_CONTENT));
     }
 
     void onGetStatus()
@@ -62,7 +64,8 @@ namespace Html
                 return;
             }
 
-            Storage::Store(*_parameters);
+            LOS::_Storage.setParameters(*_parameters);
+            LOS::_Storage.storeToEEprom();
 
             _server->send(200, "text/plain", "OK");
             return;

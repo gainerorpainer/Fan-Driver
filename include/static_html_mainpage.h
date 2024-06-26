@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <Arduino.h>
 
 static const char STATIC_HTML_MAINPAGE[] ICACHE_RODATA_ATTR =
@@ -85,7 +86,7 @@ static const char STATIC_HTML_MAINPAGE[] ICACHE_RODATA_ATTR =
 "        <br />\r\n"
 "\r\n"
 "        <!--GRAPH-->\r\n"
-"        <div>\r\n"
+"        <div style=\"min-height: 400px;\">\r\n"
 "            <canvas id=\"myChart\"></canvas>\r\n"
 "        </div>\r\n"
 "\r\n"
@@ -312,6 +313,7 @@ static const char STATIC_HTML_MAINPAGE[] ICACHE_RODATA_ATTR =
 "        chart = new Chart(ctx, {\r\n"
 "            type: \"scatter\",\r\n"
 "            options: {\r\n"
+"                maintainAspectRatio: false,\r\n"
 "                scales: {\r\n"
 "                    x: {\r\n"
 "                        suggestedMin: 12,\r\n"
@@ -499,5 +501,5 @@ static const char STATIC_HTML_MAINPAGE[] ICACHE_RODATA_ATTR =
 "    </script>\r\n"
 "</body>\r\n"
 "\r\n"
-"</html\r\n"
+"</html>\r\n"
 ;

@@ -20,6 +20,9 @@ namespace Parameters
 
         /// @brief The min heater temp at which control is enabled
         float THeatMin = 20;
+
+        /// @brief Hostname
+        char HostName[20] = "";
     };
 
     /// @brief Turns parameters into a comma separates, dotted float string

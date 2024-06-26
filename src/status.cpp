@@ -2,14 +2,12 @@
 
 namespace Status
 {
-    constexpr int JSON_HEAP = 1024;
-
     int Serialize(Status const &input, String &buffer)
     {
         // reset buffer just in case
         buffer.clear();
 
-        DynamicJsonDocument doc{JSON_HEAP};
+        JsonDocument doc{};
 
         doc["heaterTemp"] = input.HeaterTemp;
         doc["roomTemp"] = input.RoomTemp;

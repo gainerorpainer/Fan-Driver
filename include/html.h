@@ -4,6 +4,7 @@
 
 #include "parameters.h"
 #include "status.h"
+#include "codegen_attributes.h"
 
 namespace Html
 {
@@ -14,17 +15,22 @@ namespace Html
     void setup(ESP8266WebServer &server, Parameters::Parameters &parameters, Status::Status &status);
 
     /// @brief Handles GET /
+    [[http_server_bind_to("/")]]
     void onGetHome();
 
     /// @brief Handles GET /favicon.ico
+    [[http_server_bind_to("/favicon.ico")]]
     void onGetFavicon();
 
     /// @brief Handles GET /status
+    [[http_server_bind_to("/status")]]
     void onGetStatus();
 
     /// @brief Handles GET or POST /parameters
+    [[http_server_bind_to("/parameters")]]
     void onGetOrPostParameters();
 
     /// @brief Handles POST /manual
+    [[http_server_bind_to("/manual")]]
     void onManualOverride();
 }

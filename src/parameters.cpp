@@ -14,7 +14,7 @@ namespace Parameters
         doc["pMin"] = input.PMin;
         doc["pMax"] = input.PMax;
         doc["tRoomMin"] = input.TRoomMin;
-        doc["tHeatMin"] = input.THeatMin;
+        doc["tHeatMin"] = input.THeatMin;  
         return serializeJson(doc, buffer);
     }
 
