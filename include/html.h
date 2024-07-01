@@ -2,8 +2,8 @@
 
 #include <ESP8266WebServer.h>
 
-#include "parameters.h"
 #include "status.h"
+#include "codegen_parameters.h"
 #include "codegen_attributes.h"
 
 namespace Html

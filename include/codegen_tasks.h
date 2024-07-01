@@ -1,5 +1,7 @@
 #pragma once
 
+#include <CycleLimit.h>
+
 #include "tasks.h"
 
 namespace codegen::Tasks

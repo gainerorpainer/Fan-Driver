@@ -2,7 +2,6 @@
 
 #include <los.h>
 
-#include "parameters.h"
 #include "storage.h"
 #include "static_html_mainpage.h"
 #include "static_html_favicon.h"
@@ -43,7 +42,7 @@ namespace Html
         if (_server->method() == HTTP_GET)
         {
             String content;
-            size_t const contentLength = Parameters::Serialize(*_parameters, content);
+            size_t const contentLength = codegen::Parameters::serialize(*_parameters, content);
 
             _server->send(200, "application/json", content.c_str(), contentLength);
             return;
@@ -58,7 +57,7 @@ namespace Html
                 return;
             }
 
-            if (!Parameters::TryParse(_server->arg("parameters").c_str(), *_parameters))
+            if (!codegen::Parameters::tryParse(_server->arg("parameters").c_str(), *_parameters))
             {
                 _server->send(403, "text/plain", "Bad JSON");
                 return;
