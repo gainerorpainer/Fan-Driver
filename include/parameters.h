@@ -9,7 +9,7 @@
 namespace Parameters
 {
     /// @brief Global parameters (can be changed easily)
-    struct [[is_parameter_class]] Parameters
+    struct [[is_serializable_class]] Parameters
     {
         /// @brief The lowest power (in PWM) before the fans stop moving
         uint8_t PMin = 50;
@@ -22,8 +22,5 @@ namespace Parameters
 
         /// @brief The min heater temp at which control is enabled
         float THeatMin = 20;
-
-        /// @brief Hostname
-        char HostName[20] = "";
     };
 }

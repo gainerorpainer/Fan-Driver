@@ -395,10 +395,10 @@
             }
 
             $.get("/parameters", function (data, status) {
-                $('#pMin').val(data.pMin);
-                $('#pMax').val(data.pMax);
-                $('#tRoomMin').val(data.tRoomMin);
-                $('#tHeatMin').val(data.tHeatMin);
+                $('#pMin').val(data.PMin);
+                $('#pMax').val(data.PMax);
+                $('#tRoomMin').val(data.TRoomMin);
+                $('#tHeatMin').val(data.THeatMin);
 
                 UpdateGraph(null, data);
             })
@@ -453,11 +453,10 @@
             _lock_screen();
 
             var parameters = {
-                pMin: $('#pMin').val(),
-                pMax: $('#pMax').val(),
-                tRoomMin: $('#tRoomMin').val(),
-                tHeatMin: $('#tHeatMin').val(),
-                hostName: $('#hostName').val()
+                PMin: $('#pMin').val(),
+                PMax: $('#pMax').val(),
+                TRoomMin: $('#tRoomMin').val(),
+                THeatMin: $('#tHeatMin').val(),
             };
 
             UpdateGraph(null, parameters);

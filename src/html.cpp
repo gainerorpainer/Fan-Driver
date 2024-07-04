@@ -5,6 +5,7 @@
 #include "storage.h"
 #include "static_html_mainpage.h"
 #include "static_html_favicon.h"
+#include "codegen_serializable.h"
 
 namespace Html
 {
@@ -32,7 +33,7 @@ namespace Html
     void onGetStatus()
     {
         String content;
-        size_t const contentLength = Status::Serialize(*_status, content);
+        size_t const contentLength = Status::serialize(*_status, content);
         _server->send(200, "application/json", content.c_str(), contentLength);
         return;
     }
@@ -42,7 +43,7 @@ namespace Html
         if (_server->method() == HTTP_GET)
         {
             String content;
-            size_t const contentLength = codegen::Parameters::serialize(*_parameters, content);
+            size_t const contentLength = codegen::Serializable::serialize(*_parameters, content);
 
             _server->send(200, "application/json", content.c_str(), contentLength);
             return;
@@ -57,7 +58,7 @@ namespace Html
                 return;
             }
 
-            if (!codegen::Parameters::tryParse(_server->arg("parameters").c_str(), *_parameters))
+            if (!codegen::Serializable::tryParse(_server->arg("parameters").c_str(), *_parameters))
             {
                 _server->send(403, "text/plain", "Bad JSON");
                 return;

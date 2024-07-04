@@ -2,7 +2,7 @@
 
 namespace Status
 {
-    int Serialize(Status const &input, String &buffer)
+    int serialize(Status const &input, String &buffer)
     {
         // reset buffer just in case
         buffer.clear();

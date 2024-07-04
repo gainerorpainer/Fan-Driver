@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cinttypes>
+
 #include <ArduinoJson.h>
 
 namespace Status
@@ -14,10 +16,10 @@ namespace Status
         int CurrentPowerPwm = 0;
 
         /// @brief Power in 0..255
-        byte PowerRequestPerc = 0;
+        uint8_t PowerRequestPerc = 0;
 
         /// @brief if manual override, to which value to override
-        byte ManualPowerPerc = 0;
+        uint8_t ManualPowerPerc = 0;
 
         /// @brief if >0, the seconds left in manual mode
         int ManualSecondsLeft = 0;
@@ -26,9 +28,5 @@ namespace Status
         int NumReconnects = 0;
     };
 
-    /// @brief Turns a status into a string
-    /// @param input the status to serialze
-    /// @param buffer will be cleared and written to
-    /// @return the length of the string
-    int Serialize(Status const &input, String &buffer);
+    int serialize(Status const &input, String &buffer);
 }

@@ -4,52 +4,53 @@
 
 #include "parameters.h"
 
-namespace codegen::Parameters
+namespace codegen::Serializable
 {
-    /// @brief Turns parameters into json
-    /// @param input the parameters to serialze
-    /// @param buffer will be cleared and written to
+    /// @brief Turns Parameters into json
+    /// @param in the Parameters to serialze
+    /// @param out will be cleared and written to
     /// @return the length of the string
-    template <typename T>
-    static inline int serialize(T const &in, String &out)
+    int serialize(::Parameters::Parameters const &in, String &out)
     {
         // reset buffer just in case
         out.clear();
         JsonDocument doc{};
-
+    
         doc["PMin"] = in.PMin;
         doc["PMax"] = in.PMax;
         doc["TRoomMin"] = in.TRoomMin;
         doc["THeatMin"] = in.THeatMin;
 
+    
         return serializeJson(doc, out);
     }
-
-    /// @brief Attempts to parse as json
-    /// @param input the string to parse
-    /// @param output unchanged or if true is returned, the parsed data
+    
+    /// @brief Attempts to parse Parameters from json
+    /// @param in the string to parse
+    /// @param out unchanged or if true is returned, the parsed data
     /// @return true if successful
-    template <typename T>
-    static inline bool tryParse(char const *in, T &out)
+    bool tryParse(char const *in, ::Parameters::Parameters &out)
     {
         JsonDocument doc{};
         DeserializationError const error = deserializeJson(doc, in);
         if (error)
             return false;
-
+    
         JsonVariant PMin = doc["PMin"];
         JsonVariant PMax = doc["PMax"];
         JsonVariant TRoomMin = doc["TRoomMin"];
         JsonVariant THeatMin = doc["THeatMin"];
-        
+    
         if (PMin.isNull() || PMax.isNull() || TRoomMin.isNull() || THeatMin.isNull())
         	return false;
-        
+    
         out.PMin = PMin;
         out.PMax = PMax;
         out.TRoomMin = TRoomMin;
         out.THeatMin = THeatMin;
 
+    
         return true;
     }
+    
 }
