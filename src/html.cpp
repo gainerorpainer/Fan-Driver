@@ -33,7 +33,7 @@ namespace Html
     void onGetStatus()
     {
         String content;
-        size_t const contentLength = Status::serialize(*_status, content);
+        size_t const contentLength = codegen::Serializable::serialize(*_status, content);
         _server->send(200, "application/json", content.c_str(), contentLength);
         return;
     }

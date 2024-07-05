@@ -2,6 +2,7 @@
 
 #include <ArduinoJson.h>
 
+#include "status.h"
 #include "parameters.h"
 
 namespace codegen::Serializable
@@ -20,11 +21,11 @@ namespace codegen::Serializable
         doc["PMax"] = in.PMax;
         doc["TRoomMin"] = in.TRoomMin;
         doc["THeatMin"] = in.THeatMin;
-
+    
+        // user extension code, if any
     
         return serializeJson(doc, out);
     }
-    
     /// @brief Attempts to parse Parameters from json
     /// @param in the string to parse
     /// @param out unchanged or if true is returned, the parsed data
@@ -48,9 +49,33 @@ namespace codegen::Serializable
         out.PMax = PMax;
         out.TRoomMin = TRoomMin;
         out.THeatMin = THeatMin;
-
+    
+        // user extension code, if any
+        // not implemented
     
         return true;
     }
     
+    /// @brief Turns Status into json
+    /// @param in the Status to serialze
+    /// @param out will be cleared and written to
+    /// @return the length of the string
+    int serialize(::Status::Status const &in, String &out)
+    {
+        // reset buffer just in case
+        out.clear();
+        JsonDocument doc{};
+    
+        doc["HeaterTemp"] = in.HeaterTemp;
+        doc["RoomTemp"] = in.RoomTemp;
+        doc["CurrentPowerPwm"] = in.CurrentPowerPwm;
+        doc["PowerRequestPerc"] = in.PowerRequestPerc;
+        doc["ManualPowerPerc"] = in.ManualPowerPerc;
+        doc["ManualSecondsLeft"] = in.ManualSecondsLeft;
+    
+        // user extension code, if any
+        ::Status::serialize_debug_info(doc);
+    
+        return serializeJson(doc, out);
+    }
 }

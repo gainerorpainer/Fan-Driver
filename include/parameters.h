@@ -9,7 +9,7 @@
 namespace Parameters
 {
     /// @brief Global parameters (can be changed easily)
-    struct [[is_serializable_class]] Parameters
+    struct [[is_serializable_class(SERIALIZABLE_AND_PARSABLE)]] Parameters
     {
         /// @brief The lowest power (in PWM) before the fans stop moving
         uint8_t PMin = 50;

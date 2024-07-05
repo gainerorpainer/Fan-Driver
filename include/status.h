@@ -4,9 +4,11 @@
 
 #include <ArduinoJson.h>
 
+#include "codegen_attributes.h"
+
 namespace Status
 {
-    struct Status
+    struct [[is_serializable_class(SERIALIZABLE_NO_PARSING)]] Status
     {
         float HeaterTemp;
 
@@ -23,10 +25,8 @@ namespace Status
 
         /// @brief if >0, the seconds left in manual mode
         int ManualSecondsLeft = 0;
-
-        /// @brief How many times a reconnect to wifi happenend
-        int NumReconnects = 0;
     };
 
-    int serialize(Status const &input, String &buffer);
+    [[serialization_extension_for("Status")]]
+    void serialize_debug_info(JsonDocument &);
 }
