@@ -430,15 +430,15 @@
             }
 
             $.get("/status", function (data, status) {
-                $('#upTimeStr').val(_uptime_to_str(data.upTimeSeconds));
-                $('#numReconnects').val(data.numReconnects);
-                $('#freeHeap').val(data.freeHeap);
-                $('#heaterTemp').val(data.heaterTemp?.toFixed(1) ?? "nan");
-                $('#roomTemp').val(data.roomTemp?.toFixed(1) ?? "nan");
-                $('#currentPowerPwm').val(data.currentPowerPwm);
-                $('#currentPowerPerc, #currentPowerPerc_label').val(data.currentPowerPerc);
-                $('#manualPowerPerc').val(data.manualPowerPerc);
-                $('#manualSecondsLeft').val(data.manualSecondsLeft);
+                $('#upTimeStr').val(_uptime_to_str(data.UpTimeSeconds));
+                $('#numReconnects').val(data.NumReconnects);
+                $('#freeHeap').val(data.FreeHeap);
+                $('#heaterTemp').val(data.HeaterTemp?.toFixed(1) ?? "nan");
+                $('#roomTemp').val(data.RoomTemp?.toFixed(1) ?? "nan");
+                $('#currentPowerPwm').val(data.CurrentPowerPwm);
+                $('#currentPowerPerc, #currentPowerPerc_label').val(data.CurrentPowerPerc);
+                $('#manualPowerPerc').val(data.ManualPowerPerc);
+                $('#manualSecondsLeft').val(data.ManualSecondsLeft);
 
                 UpdateGraph(data, null);
             }).done(function () {
