@@ -4,6 +4,7 @@
 
 #include "parameters.h"
 #include "status.h"
+#include "tasks.h"
 #include "codegen_tasks.h"
 #include "codegen_http_server.h"
 
