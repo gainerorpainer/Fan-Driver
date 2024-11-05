@@ -2,8 +2,8 @@
 
 #include <ArduinoJson.h>
 
-#include "status.h"
 #include "parameters.h"
+#include "status.h"
 
 namespace codegen::Serializable
 {

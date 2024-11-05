@@ -2,7 +2,6 @@
 
 #include <los.h>
 
-#include "storage.h"
 #include "static_html_mainpage.h"
 #include "static_html_favicon.h"
 #include "codegen_serializable.h"
