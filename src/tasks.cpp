@@ -8,8 +8,13 @@
 
 namespace Tasks
 {
+    // global
+    HistoryBuffer<Inputs::Report, 60> InputsHistory;
+
+    // static
     Parameters::Parameters *_parameters = nullptr;
     Status::Status *_status = nullptr;
+
 
     /// @brief Calc the PWM duty cycle
     /// @param heaterTemp in ° C
@@ -55,6 +60,9 @@ namespace Tasks
         auto const report = Inputs::Read();
         _status->HeaterTemp = report.Temp1;
         _status->RoomTemp = report.Temp2;
+
+        // push to history
+        InputsHistory.Enqueue(report);
 
         // t1 = heater, t2 = room
         _status->PowerRequestPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);
