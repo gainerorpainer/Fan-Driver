@@ -5,6 +5,7 @@
 #include "static_html_mainpage.h"
 #include "static_html_favicon.h"
 #include "codegen_serializable.h"
+#include "tasks.h"
 
 namespace Html
 {
@@ -107,6 +108,26 @@ namespace Html
         _status->ManualSecondsLeft = parsedSeconds;
 
         _server->send(200, "text/plain", "OK");
+        return;
+    }
+
+    void onGetHistory()
+    {
+        JsonDocument doc;
+        JsonArray heater;
+        JsonArray room;
+        for (auto const &item : Tasks::MinutesReport)
+        {
+            heater.add(item.HeaterTemp.AsFloat());
+            room.add(item.RoomTemp.AsFloat());
+        }
+
+        doc["heater"] = heater;
+        doc["room"] = room;
+
+        String content;
+        size_t const contentLength = serializeJson(doc, content);;
+        _server->send(200, "application/json", content.c_str(), contentLength);
         return;
     }
 }

@@ -15,7 +15,7 @@ namespace codegen::Serializable
     {
         // reset buffer just in case
         out.clear();
-        JsonDocument doc{};
+        JsonDocument doc;
     
         doc["PMin"] = in.PMin;
         doc["PMax"] = in.PMax;
@@ -32,7 +32,7 @@ namespace codegen::Serializable
     /// @return true if successful
     bool tryParse(char const *in, ::Parameters::Parameters &out)
     {
-        JsonDocument doc{};
+        JsonDocument doc;
         DeserializationError const error = deserializeJson(doc, in);
         if (error)
             return false;
@@ -64,7 +64,7 @@ namespace codegen::Serializable
     {
         // reset buffer just in case
         out.clear();
-        JsonDocument doc{};
+        JsonDocument doc;
     
         doc["HeaterTemp"] = in.HeaterTemp;
         doc["RoomTemp"] = in.RoomTemp;

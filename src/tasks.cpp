@@ -9,12 +9,12 @@
 namespace Tasks
 {
     // global
-    HistoryBuffer<Inputs::Report, 60> InputsHistory;
+    CircularBuffer<HistoryDataPoint, 60 * 24> MinutesReport;
 
     // static
+    CircularBuffer<HistoryDataPoint, 60> SecondsReport;
     Parameters::Parameters *_parameters = nullptr;
     Status::Status *_status = nullptr;
-
 
     /// @brief Calc the PWM duty cycle
     /// @param heaterTemp in ° C
@@ -49,7 +49,7 @@ namespace Tasks
         status = status;
 
         Inputs::Setup();
-        
+
         // set fast-PWM to mid frequency of 4k
         analogWriteFreq(4000);
     }
@@ -62,7 +62,23 @@ namespace Tasks
         _status->RoomTemp = report.Temp2;
 
         // push to history
-        InputsHistory.Enqueue(report);
+        SecondsReport.Enqueue(HistoryDataPoint{.HeaterTemp{report.Temp1}, .RoomTemp{report.Temp2}});
+        if (SecondsReport.NumItems() == SecondsReport.Size())
+        {
+            // make average and copy over
+            float heaterAvg = 0;
+            float roomAvg = 0;
+            for (auto const &item : SecondsReport)
+            {
+                heaterAvg += item.HeaterTemp.AsFloat();
+                roomAvg += item.RoomTemp.AsFloat();
+            }
+            heaterAvg /= (float)SecondsReport.Size();
+            roomAvg /= (float)SecondsReport.Size();
+
+            MinutesReport.Enqueue(HistoryDataPoint{.HeaterTemp{heaterAvg}, .RoomTemp{roomAvg}});
+            SecondsReport.Clear();
+        }
 
         // t1 = heater, t2 = room
         _status->PowerRequestPerc = CalcFanPowerPerc(report.Temp1, report.Temp2);

@@ -33,4 +33,8 @@ namespace Html
     /// @brief Handles POST /manual
     [[http_server_bind_to("/manual")]]
     void onManualOverride();
+
+    /// @brief Handles GET /history
+    [[http_server_bind_to("/history")]]
+    void onGetHistory();
 }

@@ -12,7 +12,7 @@ namespace codegen::Http_Server
     {
         // GET /version
         LOS::_HttpServer.on("/version", []()
-                            { LOS::_HttpServer.send(200, "text/plain", String{"1.0-2024_11_05"}); });
+                            { LOS::_HttpServer.send(200, "text/plain", String{"1.1-2025_01_16"}); });
         
         // GET /os
         LOS::_HttpServer.on("/os", []()
@@ -24,5 +24,6 @@ namespace codegen::Http_Server
         LOS::_HttpServer.on("/status", ::Html::onGetStatus);
         LOS::_HttpServer.on("/parameters", ::Html::onGetOrPostParameters);
         LOS::_HttpServer.on("/manual", ::Html::onManualOverride);
+        LOS::_HttpServer.on("/history", ::Html::onGetHistory);
     }
 }

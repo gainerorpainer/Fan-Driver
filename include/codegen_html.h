@@ -6279,7 +6279,7 @@ static const char STATIC_HTML_MAINPAGE[] ICACHE_RODATA_ATTR =
 "            <div class=\"row\">\r\n"
 "                <div class=\"col-12\">\r\n"
 "                    <div class=\"row\">\r\n"
-"                        <label for=\"currentPowerPerc\" class=\"form-label\">Aktuelle Lüfterleistung:</label>\r\n"
+"                        <label for=\"currentPowerPerc\" class=\"form-label\">Aktuelle Lüfterregelung:</label>\r\n"
 "                    </div>\r\n"
 "                    <div class=\"row\">\r\n"
 "                        <div class=\"col-4\">\r\n"
