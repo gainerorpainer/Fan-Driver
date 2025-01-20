@@ -112,6 +112,7 @@ namespace Html
     void onGetHistory()
     {
         JsonDocument doc;
+        doc["numItems"] = Tasks::MinutesReport.NumItems() + 1;
         JsonArray heater = doc["heater"].to<JsonArray>();
         JsonArray room = doc["room"].to<JsonArray>();
 

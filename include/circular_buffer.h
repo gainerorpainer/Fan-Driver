@@ -8,10 +8,10 @@ class CircularBufferIterator
 private:
     T const *const _Item0;
     unsigned int _Position;
-    bool _HasRolledOver = false;
+    bool _HasRolledOver;
 
 public:
-    CircularBufferIterator(T const *item0, unsigned int position) : _Item0{item0}, _Position{position} {};
+    CircularBufferIterator(T const *item0, unsigned int position, bool hasRolledOver = false) : _Item0{item0}, _Position{position % SIZE}, _HasRolledOver{hasRolledOver} {};
 
     CircularBufferIterator &operator++()
     {
@@ -27,7 +27,7 @@ public:
 
     bool operator!=(const CircularBufferIterator &other) const
     {
-        return _Position != other._Position;
+        return !((_Position == other._Position) && (_HasRolledOver == other._HasRolledOver));
     }
 };
 
@@ -52,7 +52,7 @@ public:
     {
         _Buffer[_WriteIndex] = value;
         _WriteIndex = (_WriteIndex + 1) % SIZE;
-        _IsFull |= _WriteIndex = 0; // is full as soon as first time rollover to '0'
+        _IsFull |= _WriteIndex == 0; // is full as soon as first time rollover to '0'
     }
 
     T &Last()
@@ -86,13 +86,17 @@ public:
     /// @return const it
     ConstIt_t begin() const
     {
-        return CircularBufferIterator<T, SIZE>(_Buffer.begin(), _WriteIndex);
+        auto const index = _IsFull ? _WriteIndex // what would be written next
+                                   : 0;          // normal 0-beginning
+        return CircularBufferIterator<T, SIZE>{_Buffer.begin(), index};
     }
 
     /// @brief Create iterator to the end of valid items
     /// @return const it
-    ConstIt_t end() consts
+    ConstIt_t end() const
     {
-        return CircularBufferIterator<T, SIZE>{_Buffer.begin(), (_WriteIndex + _NumItems) % SIZE};
+        return CircularBufferIterator<T, SIZE>{_Buffer.begin(), _WriteIndex,
+                                               // pass if index has rolled over
+                                               _IsFull};
     }
 };
