@@ -1,7 +1,8 @@
 #include "tasks.h"
 
-#include <Arduino.h>
+#include <ESP8266HTTPClient.h>
 
+#include <los.h>
 #include <CycleLimit.h>
 
 #include "inputs.h"
@@ -133,5 +134,22 @@ namespace Tasks
             MinutesReport.Enqueue(SubMinute.GetDataPoint());
             SubMinute.Reset();
         }
+    }
+
+    void alivePing()
+    {
+        static WiFiClient wifiClient;
+        static HTTPClient httpClient;
+
+        httpClient.begin(wifiClient, "http://jobst.goerne-web.de/aliveping");
+        httpClient.setTimeout(1000);
+        httpClient.addHeader("Content-Type", "application/json");
+        String payload = "{\"name\": \"" + LOS::_Storage.WifiConfig.HostName.asStr() + "\"}";
+        auto const responseCode = httpClient.POST(payload);
+        Serial.print("AlivePing=");
+        Serial.println(responseCode);
+        //Serial.println(httpClient.getString());
+
+        httpClient.end();
     }
 }

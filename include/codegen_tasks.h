@@ -10,6 +10,7 @@ namespace codegen::Tasks
     {
         ::Tasks::controlFans();
         ::Tasks::logHistory();
+        ::Tasks::alivePing();
     }
 
     static inline void loop()
@@ -22,5 +23,8 @@ namespace codegen::Tasks
         static CycleLimit::CycleLimit logHistory_cl_limit{83};
         if (logHistory_cl_limit.IsCycleCooledDown(now))
         	::Tasks::logHistory();
+        static CycleLimit::CycleLimit alivePing_cl_limit{60000};
+        if (alivePing_cl_limit.IsCycleCooledDown(now))
+        	::Tasks::alivePing();
     }
 }

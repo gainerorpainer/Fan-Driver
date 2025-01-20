@@ -32,6 +32,9 @@ void setup()
     LOS::_Storage.setParameters(Parameters::Parameters{});
     LOS::_Storage.storeToEEprom();
   }
+
+  // run alive_ping once directly
+  Tasks::alivePing();
 }
 
 /// @brief LOOP

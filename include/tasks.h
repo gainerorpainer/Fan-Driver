@@ -84,4 +84,7 @@ namespace Tasks
     /// @brief Make sure to call this with LOG_HISTORY_INTERVAL_MS!
     [[task_with_interval(83)]]
     void logHistory();
+
+    [[task_with_interval(60000)]]
+    void alivePing();
 }
