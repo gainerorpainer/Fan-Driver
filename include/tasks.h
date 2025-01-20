@@ -59,6 +59,7 @@ namespace Tasks
         float _HeaterAvg = 0;
         float _RoomAvg = 0;
         unsigned int _SubMinuteCounter = 0;
+
     public:
         bool PushDatapoint(float heater, float room);
 

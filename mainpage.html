@@ -495,23 +495,10 @@
         function UpdateHistoryGraph(history) {
             // custom label function
             const numItems = history.heater.length;
-            const hoursOffset = new Date().getHours();
-            const startTime = new Date(new Date().getTime() - numItems * 60 * 1000); // subtract x minutes
+            const startTime = new Date(new Date().getTime() - numItems * 60 * 1000); // subtract x minutes in millis
             historyChart.options.scales["x"].ticks.callback = function (value, index) {
-                if (index == 0){
-                    
-                    return startTime.getHours().toString().padStart(2, '0') + ":" + startTime.getMinutes().toString().padStart(2, '0');
-                }
-
-                if (index == numItems - 1) {
-                    return "Jetzt";
-                }
-
-                if ((index % 60) == (60 - startTime.getMinutes())) {
-                    return (hoursOffset - Math.floor(numItems / 60)).toString().padStart(2, '0') + ":00";
-                }
-
-                return "";
+                time = new Date(startTime.getTime() + value * 60 * 1000); // add x minutes in millis
+                return time.getHours().toString().padStart(2, '0') + ":" + time.getMinutes().toString().padStart(2, '0');
             }
             historyChart.options.scales["x"].suggestedMax = numItems;
 
