@@ -51,7 +51,7 @@
 </head>
 
 <body>
-    <h1>Fan Driver Controller</h1>
+    <h1 id="title">Fan Driver Controller</h1>
 
     <div class="container-fluid">
         <!--TOPs-->
@@ -403,9 +403,9 @@
             if (parameters != null) {
                 controlXMin = parameters.tRoomMin - 1;
 
-                annotations.warmRoom.xMin = annotations.controlBox.xMax = parameters.tRoomMin;
-                annotations.controlBox.xMin = annotations.fullPowerBox.xMax = controlXMin;
-                annotations.coldHeater.yMax = annotations.warmRoom.yMin = annotations.controlBox.yMin = annotations.fullPowerBox.yMin = parameters.tHeatMin;
+                currentChartAnnotations.warmRoom.xMin = currentChartAnnotations.controlBox.xMax = parameters.tRoomMin;
+                currentChartAnnotations.controlBox.xMin = currentChartAnnotations.fullPowerBox.xMax = controlXMin;
+                currentChartAnnotations.coldHeater.yMax = currentChartAnnotations.warmRoom.yMin = currentChartAnnotations.controlBox.yMin = currentChartAnnotations.fullPowerBox.yMin = parameters.tHeatMin;
             }
 
             currentChart.update();
@@ -419,28 +419,30 @@
             datasets: [
                 {
                     label: "Raum",
-                    borderColor: "rgb(0,0,0)",
-                    pointBorderColor: "rgb(0,0,0)",
-                    backgroundColor: "rgb(0,0,0)",
-                    radius: 12,
-                    pointStyle: "circle",
                     data: {
                         x: 0,
                         y: 0,
                     },
+                    showLine: true,
+                    pointStyle: "circle",
+                    radius: 3,
+                    borderColor: "rgb(0,0,0)",
+                    pointBorderColor: "rgb(0,0,0)",
+                    backgroundColor: "rgb(0,0,0)",
                     backgroundColor: "rgb(255, 99, 132)",
                 },
                 {
                     label: "Heizung",
-                    borderColor: "rgb(0,0,0)",
-                    pointBorderColor: "rgb(0,0,0)",
-                    backgroundColor: "rgb(0,0,0)",
-                    radius: 12,
-                    pointStyle: "circle",
                     data: {
                         x: 0,
                         y: 0,
                     },
+                    showLine: true,
+                    pointStyle: "circle",
+                    radius: 3,
+                    borderColor: "rgb(0,0,0)",
+                    pointBorderColor: "rgb(0,0,0)",
+                    backgroundColor: "rgb(0,0,0)",
                     backgroundColor: "rgb(100, 99, 200)",
                 }
             ],
@@ -492,26 +494,32 @@
 
         function UpdateHistoryGraph(history) {
             // custom label function
-            const numItems = history.length;
-            const minutesOffset = new Date().getMinutes();
+            const numItems = history.heater.length;
             const hoursOffset = new Date().getHours();
+            const startTime = new Date(new Date().getTime() - numItems * 60 * 1000); // subtract x minutes
             historyChart.options.scales["x"].ticks.callback = function (value, index) {
+                if (index == 0){
+                    
+                    return startTime.getHours().toString().padStart(2, '0') + ":" + startTime.getMinutes().toString().padStart(2, '0');
+                }
+
                 if (index == numItems - 1) {
                     return "Jetzt";
                 }
 
-                if ((index % (60 - minutesOffset)) == 0) {
-                    return (hoursOffset - floor(numItems / 60)).toString().padStart(2, '0') + ":00";
+                if ((index % 60) == (60 - startTime.getMinutes())) {
+                    return (hoursOffset - Math.floor(numItems / 60)).toString().padStart(2, '0') + ":00";
                 }
 
                 return "";
             }
+            historyChart.options.scales["x"].suggestedMax = numItems;
 
-            chart.data.datasets[0].data = history.room.map(function (x, index) {
-                return { x: index, y: y };
+            historyChart.data.datasets[0].data = history.room.map(function (val, index) {
+                return { x: index, y: val };
             });
-            chart.data.datasets[1].data = history.heater.map(function (x, index) {
-                return { x: index, y: y };
+            historyChart.data.datasets[1].data = history.heater.map(function (val, index) {
+                return { x: index, y: val };
             });
 
             historyChart.update();
@@ -520,6 +528,16 @@
 
     <!--Site scripts-->
     <script>
+        $.ajaxSetup({
+            timeout: 3000 //Time in milliseconds
+        });
+
+        $("#nav-historyChart-tab").click(function () {
+            $.get("/history").done(function (data) {
+                UpdateHistoryGraph(data);
+            })
+        });
+
         _Lock_Parameters = false;
 
         // enable all tooltips
@@ -558,9 +576,7 @@
                 UpdateCurrentGraph(null, data);
             })
                 .done(function () {
-                    if (lockScreen) {
-                        _unlock_screen();
-                    }
+                    _unlock_screen();
                 });
         }
 
@@ -639,6 +655,12 @@
         }
 
         $(function () {
+            // copy hostname into title
+            $.get("/os").done(function (data, status) {
+                document.title = data["hostname"];
+                $("#title").html(data["hostname"]);
+            });
+
             // initial refresh
             refresh(true);
 

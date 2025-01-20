@@ -21,6 +21,11 @@ namespace Parameters
         float TRoomMin = 20;
 
         /// @brief The min heater temp at which control is enabled
-        float THeatMin = 20;
+        float THeatMin = 30;
+
+        bool ArePlausible()
+        {
+            return !isnan(TRoomMin) && TRoomMin > 0 && TRoomMin < 30 && !isnan(THeatMin) && THeatMin > 0 && THeatMin < 100;
+        }
     };
 }

@@ -9,6 +9,7 @@ namespace codegen::Tasks
     static inline void call_once()
     {
         ::Tasks::controlFans();
+        ::Tasks::logHistory();
     }
 
     static inline void loop()
@@ -18,5 +19,8 @@ namespace codegen::Tasks
         static CycleLimit::CycleLimit controlFans_cl_limit{1000};
         if (controlFans_cl_limit.IsCycleCooledDown(now))
         	::Tasks::controlFans();
+        static CycleLimit::CycleLimit logHistory_cl_limit{83};
+        if (logHistory_cl_limit.IsCycleCooledDown(now))
+        	::Tasks::logHistory();
     }
 }

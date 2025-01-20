@@ -81,6 +81,6 @@ namespace Tasks
     void controlFans();
 
     /// @brief Make sure to call this with LOG_HISTORY_INTERVAL_MS!
-    [[task_with_interval(5000/60)]]
+    [[task_with_interval(83)]]
     void logHistory();
 }

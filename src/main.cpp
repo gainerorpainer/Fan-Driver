@@ -26,6 +26,12 @@ void setup()
   Html::setup(LOS::_HttpServer, _Parameters, _Status);
   if (!LOS::_Storage.getParameters(_Parameters))
     Serial.println("Could not load parameters, fall back to defaults");
+  if (!_Parameters.ArePlausible())
+  {
+    Serial.println("Parameters are inplausible, fall back to defaults");
+    LOS::_Storage.setParameters(Parameters::Parameters{});
+    LOS::_Storage.storeToEEprom();
+  }
 }
 
 /// @brief LOOP
