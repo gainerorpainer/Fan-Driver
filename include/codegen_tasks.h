@@ -8,13 +8,15 @@ namespace codegen::Tasks
 {
     static inline void call_once()
     {
-        ::Tasks::cycle1Hz();
+        ::Tasks::controlFans();
     }
 
     static inline void loop()
     {
-        static CycleLimit::CycleLimit cycle1Hz_cl_limit{1000};
-        if (cycle1Hz_cl_limit.IsCycleCooledDown())
-        	::Tasks::cycle1Hz();
+        CycleLimit::Time_t const now = millis();
+        
+        static CycleLimit::CycleLimit controlFans_cl_limit{1000};
+        if (controlFans_cl_limit.IsCycleCooledDown(now))
+        	::Tasks::controlFans();
     }
 }

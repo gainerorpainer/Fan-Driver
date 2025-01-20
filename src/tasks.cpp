@@ -8,6 +8,11 @@
 
 namespace Tasks
 {
+    // globals
+    CircularBuffer<HistoryDataPoint, 60 * 24> MinutesReport;
+    SubMinuteHistory SubMinute;
+
+    // statics
     Parameters::Parameters *_parameters = nullptr;
     Status::Status *_status = nullptr;
 
@@ -41,15 +46,33 @@ namespace Tasks
     void setup(Parameters::Parameters *parameters, Status::Status *status)
     {
         _parameters = parameters;
-        status = status;
+        _status = status;
 
         Inputs::Setup();
-        
+
         // set fast-PWM to mid frequency of 4k
         analogWriteFreq(4000);
     }
 
-    void cycle1Hz()
+    bool SubMinuteHistory::PushDatapoint(float heater, float room)
+    {
+        _HeaterAvg = (_HeaterAvg * _SubMinuteCounter + heater) / (_SubMinuteCounter + 1);
+        _RoomAvg = (_RoomAvg * _SubMinuteCounter + room) / (_SubMinuteCounter + 1);
+        _SubMinuteCounter++;
+        return (_SubMinuteCounter >= (60 * 1000) / LOG_HISTORY_INTERVAL_MS);
+    }
+
+    void SubMinuteHistory::Reset()
+    {
+        _SubMinuteCounter = _RoomAvg = _HeaterAvg = 0;
+    }
+
+    HistoryDataPoint SubMinuteHistory::GetDataPoint()
+    {
+        return HistoryDataPoint{.HeaterTemp{_HeaterAvg}, .RoomTemp{_HeaterAvg}};
+    }
+
+    void controlFans()
     {
         // get temp readings
         auto const report = Inputs::Read();
@@ -96,5 +119,19 @@ namespace Tasks
 
         // printouts
         Serial.println(".");
+    }
+
+    void logHistory()
+    {
+        // get temp readings
+        auto const report = Inputs::Read();
+
+        // push to sub-minute history
+        if (SubMinute.PushDatapoint(report.Temp1, report.Temp2))
+        {
+            // push to minute history
+            MinutesReport.Enqueue(SubMinute.GetDataPoint());
+            SubMinute.Reset();
+        }
     }
 }

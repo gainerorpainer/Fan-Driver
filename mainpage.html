@@ -83,9 +83,29 @@
         <br />
 
         <!--GRAPH-->
-        <h2>Diagramme</h2>
-        <div style="min-height: 400px;">
-            <canvas id="myChart"></canvas>
+        <h2><i class="bi bi-graph-up"></i> Diagramme</h2>
+        <nav>
+            <div class="nav nav-tabs" id="nav-tab" role="tablist">
+                <button class="nav-link active" id="nav-currentChart-tab" data-bs-toggle="tab"
+                    data-bs-target="#nav-currentChart" type="button" role="tab" aria-controls="nav-currentChart"
+                    aria-selected="true">Aktueller Status</button>
+                <button class="nav-link" id="nav-historyChart-tab" data-bs-toggle="tab"
+                    data-bs-target="#nav-historyChart" type="button" role="tab" aria-controls="nav-historyChart"
+                    aria-selected="false">Letzte 24h</button>
+            </div>
+        </nav>
+        <div class="tab-content" id="nav-tabContent">
+            <div class="tab-pane fade show active" id="nav-currentChart" role="tabpanel"
+                aria-labelledby="nav-currentChart-tab">
+                <div style="min-height: 400px;">
+                    <canvas id="currentChart"></canvas>
+                </div>
+            </div>
+            <div class="tab-pane fade" id="nav-historyChart" role="tabpanel" aria-labelledby="nav-historyChart-tab">
+                <div style="min-height: 400px;">
+                    <canvas id="historyChart"></canvas>
+                </div>
+            </div>
         </div>
 
         <br />
@@ -245,9 +265,7 @@
 
     <!--currentChart-->
     <script>
-        const ctx = document.getElementById("myChart");
-
-        const data = {
+        const currentChartData = {
             datasets: [
                 {
                     label: "Aktuelle Situation",
@@ -267,16 +285,16 @@
             ],
         };
 
-        const x_min = 10;
-        const y_max = 10;
+        const annotation_x_min = 10;
+        const annotation_y_max = 10;
 
-        const annotations = {
+        const currentChartAnnotations = {
             warmRoom: {
                 type: "box",
                 backgroundColor: "rgba(255, 100, 100, 0.25)",
                 borderWidth: 0,
-                xMin: x_min,
-                yMin: y_max,
+                xMin: annotation_x_min,
+                yMin: annotation_y_max,
                 label: {
                     display: true,
                     textAlign: "center",
@@ -290,7 +308,7 @@
                 type: "box",
                 backgroundColor: "rgba(100, 100, 100, 0.25)",
                 borderWidth: 0.25,
-                yMax: y_max,
+                yMax: annotation_y_max,
                 label: {
                     display: true,
                     textAlign: "center",
@@ -303,9 +321,9 @@
                 type: "box",
                 backgroundColor: "rgba(255, 120, 0, 0.25)",
                 borderWidth: 0,
-                xMin: x_min - 1,
-                xMax: x_min,
-                yMin: y_max,
+                xMin: annotation_x_min - 1,
+                xMax: annotation_x_min,
+                yMin: annotation_y_max,
                 label: {
                     display: true,
                     textAlign: "center",
@@ -318,8 +336,8 @@
                 type: "box",
                 backgroundColor: "rgba(0, 0, 255, 0.25)",
                 borderWidth: 0,
-                xMax: x_min - 1,
-                yMin: y_max,
+                xMax: annotation_x_min - 1,
+                yMin: annotation_y_max,
                 label: {
                     display: true,
                     textAlign: "center",
@@ -329,8 +347,9 @@
             },
         };
 
-        chart = new Chart(ctx, {
+        currentChart = new Chart(document.getElementById("currentChart"), {
             type: "scatter",
+            data: currentChartData,
             options: {
                 maintainAspectRatio: false,
                 scales: {
@@ -361,21 +380,20 @@
                     },
                     title: {
                         display: true,
-                        text: "Dashboard",
+                        text: "Aktueller Status",
                     },
                     annotation: {
-                        annotations: annotations,
+                        annotations: currentChartAnnotations,
                     },
                 },
             },
-            data: data,
         });
 
-        /// @brief Updates Graph with new values, while @ the same time 
-        function UpdateGraph(status, parameters) {
+        /// @brief Updates Graph with new values
+        function UpdateCurrentGraph(status, parameters) {
 
             if (status != null) {
-                datapoint = chart.data.datasets[0].data[0];
+                datapoint = currentChart.data.datasets[0].data[0];
 
                 datapoint.x = status.roomTemp;
                 datapoint.y = status.heaterTemp;
@@ -390,7 +408,113 @@
                 annotations.coldHeater.yMax = annotations.warmRoom.yMin = annotations.controlBox.yMin = annotations.fullPowerBox.yMin = parameters.tHeatMin;
             }
 
-            chart.update();
+            currentChart.update();
+        }
+    </script>
+
+    <!--historyChart-->
+    <script>
+        const historyData = {
+            labels: ["Jetzt", "Gleich"],
+            datasets: [
+                {
+                    label: "Raum",
+                    borderColor: "rgb(0,0,0)",
+                    pointBorderColor: "rgb(0,0,0)",
+                    backgroundColor: "rgb(0,0,0)",
+                    radius: 12,
+                    pointStyle: "circle",
+                    data: {
+                        x: 0,
+                        y: 0,
+                    },
+                    backgroundColor: "rgb(255, 99, 132)",
+                },
+                {
+                    label: "Heizung",
+                    borderColor: "rgb(0,0,0)",
+                    pointBorderColor: "rgb(0,0,0)",
+                    backgroundColor: "rgb(0,0,0)",
+                    radius: 12,
+                    pointStyle: "circle",
+                    data: {
+                        x: 0,
+                        y: 0,
+                    },
+                    backgroundColor: "rgb(100, 99, 200)",
+                }
+            ],
+        };
+
+        historyChart = new Chart(document.getElementById("historyChart"), {
+            type: "scatter",
+            data: historyData,
+            options: {
+                maintainAspectRatio: false,
+                responsive: true,
+                scales: {
+                    x: {
+                        suggestedMin: 0,
+                        suggestedMax: 24 * 60,
+                        title: {
+                            display: true,
+                            text: "Uhrzeit",
+                        },
+                        ticks: {
+                            callback: function (value, index) {
+                                return "";
+                            }
+                        }
+                    },
+                    y: {
+                        suggestedMin: 0,
+                        suggestedMax: 70,
+                        title: {
+                            display: true,
+                            text: "Temperatur [°C]",
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        position: "top",
+                        labels: {
+                            usePointStyle: true,
+                        },
+                    },
+                    title: {
+                        display: true,
+                        text: "Letzte 24h",
+                    },
+                },
+            },
+        });
+
+        function UpdateHistoryGraph(history) {
+            // custom label function
+            const numItems = history.length;
+            const minutesOffset = new Date().getMinutes();
+            const hoursOffset = new Date().getHours();
+            historyChart.options.scales["x"].ticks.callback = function (value, index) {
+                if (index == numItems - 1) {
+                    return "Jetzt";
+                }
+
+                if ((index % (60 - minutesOffset)) == 0) {
+                    return (hoursOffset - floor(numItems / 60)).toString().padStart(2, '0') + ":00";
+                }
+
+                return "";
+            }
+
+            chart.data.datasets[0].data = history.room.map(function (x, index) {
+                return { x: index, y: y };
+            });
+            chart.data.datasets[1].data = history.heater.map(function (x, index) {
+                return { x: index, y: y };
+            });
+
+            historyChart.update();
         }
     </script>
 
@@ -431,7 +555,7 @@
                 $('#tRoomMin').val(data.TRoomMin);
                 $('#tHeatMin').val(data.THeatMin);
 
-                UpdateGraph(null, data);
+                UpdateCurrentGraph(null, data);
             })
                 .done(function () {
                     if (lockScreen) {
@@ -471,7 +595,7 @@
                 $('#manualPowerPerc').val(data.ManualPowerPerc);
                 $('#manualSecondsLeft').val(data.ManualSecondsLeft);
 
-                UpdateGraph(data, null);
+                UpdateCurrentGraph(data, null);
             }).done(function () {
                 $('#isConnected').prop('checked', true);
                 _refreshParameters(lockScreen);
@@ -490,7 +614,7 @@
                 THeatMin: $('#tHeatMin').val(),
             };
 
-            UpdateGraph(null, parameters);
+            UpdateCurrentGraph(null, parameters);
 
             lock_parameters();
 

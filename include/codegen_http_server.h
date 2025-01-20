@@ -24,5 +24,6 @@ namespace codegen::Http_Server
         LOS::_HttpServer.on("/status", ::Html::onGetStatus);
         LOS::_HttpServer.on("/parameters", ::Html::onGetOrPostParameters);
         LOS::_HttpServer.on("/manual", ::Html::onManualOverride);
+        LOS::_HttpServer.on("/history", ::Html::onGetHistory);
     }
 }

@@ -2,6 +2,7 @@
 
 #include <los.h>
 
+#include "tasks.h"
 #include "static_html_mainpage.h"
 #include "static_html_favicon.h"
 #include "codegen_serializable.h"
@@ -34,7 +35,6 @@ namespace Html
         String content;
         size_t const contentLength = codegen::Serializable::serialize(*_status, content);
         _server->send(200, "application/json", content.c_str(), contentLength);
-        return;
     }
 
     void onGetOrPostParameters()
@@ -108,5 +108,28 @@ namespace Html
 
         _server->send(200, "text/plain", "OK");
         return;
+    }
+
+    void onGetHistory()
+    {
+        JsonDocument doc;
+        JsonArray heater;
+        JsonArray room;
+        
+        for (auto const &item : Tasks::MinutesReport)
+        {
+            heater.add(item.HeaterTemp.AsFloat());
+            room.add(item.RoomTemp.AsFloat());
+        }
+        auto const lastItem = Tasks::SubMinute.GetDataPoint();
+        heater.add(lastItem.HeaterTemp.AsFloat());
+        room.add(lastItem.RoomTemp.AsFloat());
+
+        doc["heater"] = heater;
+        doc["room"] = room;
+
+        String content;
+        size_t const contentLength = serializeJson(doc, content);
+        _server->send(200, "application/json", content.c_str(), contentLength);
     }
 }
