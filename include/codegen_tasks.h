@@ -6,6 +6,11 @@
 
 namespace codegen::Tasks
 {
+    static inline void call_once()
+    {
+        ::Tasks::cycle1Hz();
+    }
+
     static inline void loop()
     {
         static CycleLimit::CycleLimit cycle1Hz_cl_limit{1000};

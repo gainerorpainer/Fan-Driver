@@ -12,7 +12,7 @@ namespace codegen::Http_Server
     {
         // GET /version
         LOS::_HttpServer.on("/version", []()
-                            { LOS::_HttpServer.send(200, "text/plain", String{"1.0-2024_11_05"}); });
+                            { LOS::_HttpServer.send(200, "text/plain", String{"1.1-2025_01_20"}); });
         
         // GET /os
         LOS::_HttpServer.on("/os", []()
