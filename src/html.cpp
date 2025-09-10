@@ -19,16 +19,6 @@ namespace Html
         _status = &status;
     }
 
-    void onGetHome()
-    {
-        _server->send(200, "text/html", STATIC_HTML_MAINPAGE, sizeof(STATIC_HTML_MAINPAGE));
-    }
-
-    void onGetFavicon()
-    {
-        _server->send(200, "image/x-icon", STATIC_HTML_FAVICON_CONTENT, sizeof(STATIC_HTML_FAVICON_CONTENT));
-    }
-
     void onGetStatus()
     {
         String content;

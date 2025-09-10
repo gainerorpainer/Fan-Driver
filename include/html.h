@@ -14,14 +14,6 @@ namespace Html
     /// @param server Initialized status instance (for /status)
     void setup(ESP8266WebServer &server, Parameters::Parameters &parameters, Status::Status &status);
 
-    /// @brief Handles GET /
-    [[http_server_bind_to("/")]]
-    void onGetHome();
-
-    /// @brief Handles GET /favicon.ico
-    [[http_server_bind_to("/favicon.ico")]]
-    void onGetFavicon();
-
     /// @brief Handles GET /status
     [[http_server_bind_to("/status")]]
     void onGetStatus();

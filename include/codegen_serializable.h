@@ -1,12 +1,21 @@
 #pragma once
 
+#include "los.h"
+
 #include <ArduinoJson.h>
 
-#include "status.h"
 #include "parameters.h"
+#include "status.h"
 
 namespace codegen::Serializable
 {
+    static void _add_debug_info(JsonDocument &doc)
+    {
+        doc["NumReconnects"] = LOS::_NumWifiReconnects;
+        doc["UpTimeSeconds"] = millis() / 1000;
+        doc["FreeHeap"] = ESP.getFreeHeap();
+    }
+
     /// @brief Turns Parameters into json
     /// @param in the Parameters to serialze
     /// @param out will be cleared and written to
@@ -16,6 +25,7 @@ namespace codegen::Serializable
         // reset buffer just in case
         out.clear();
         JsonDocument doc;
+        
     
         doc["PMin"] = in.PMin;
         doc["PMax"] = in.PMax;
@@ -65,6 +75,8 @@ namespace codegen::Serializable
         // reset buffer just in case
         out.clear();
         JsonDocument doc;
+        
+        _add_debug_info(doc);
     
         doc["HeaterTemp"] = in.HeaterTemp;
         doc["RoomTemp"] = in.RoomTemp;
@@ -74,7 +86,6 @@ namespace codegen::Serializable
         doc["ManualSecondsLeft"] = in.ManualSecondsLeft;
     
         // user extension code, if any
-        ::Status::serialize_debug_info(doc);
     
         return serializeJson(doc, out);
     }

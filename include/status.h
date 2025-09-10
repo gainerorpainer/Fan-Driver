@@ -8,7 +8,7 @@
 
 namespace Status
 {
-    struct [[is_serializable_class(SERIALIZABLE_NO_PARSING)]] Status
+    struct [[is_serializable_class(TYPE_STATUS)]] Status
     {
         float HeaterTemp;
 
@@ -26,7 +26,4 @@ namespace Status
         /// @brief if >0, the seconds left in manual mode
         int ManualSecondsLeft = 0;
     };
-
-    [[serialization_extension_for("Status")]]
-    void serialize_debug_info(JsonDocument &);
 }
